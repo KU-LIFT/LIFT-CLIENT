@@ -3,7 +3,8 @@ import PrivateRoute from './PrivateRoute';
 import LoginPage from '../pages/LoginPage';
 import MainLayout from '../pages/MainLayout';
 import DashBoardPage from '../pages/DashBoardPage';
-import BoardPage from '../pages/BoardPage';
+// import BoardPage from '../pages/BoardPage';
+import BoardPage from '@/pages/BoardPage';
 import UserListPage from '../pages/UserListPage';
 import SettingPage from '../pages/SettingPage';
 

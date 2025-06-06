@@ -1,8 +1,15 @@
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import styled from '@emotion/styled';
+import { useState, useEffect } from 'react';
 
 function MainLayout() {
 	const navigate = useNavigate();
+	const location = useLocation();
+	const [selectedMenu, setSelectedMenu] = useState('/');
+
+	useEffect(() => {
+		setSelectedMenu(location.pathname);
+	}, [location.pathname]);
 
 	const handleLogout = () => {
 		localStorage.removeItem('access_token');
@@ -15,10 +22,18 @@ function MainLayout() {
 			<Sidebar>
 				<Logo>LIFT</Logo>
 				<MenuList>
-					<MenuItem onClick={() => navigate('/')}>Dashboard</MenuItem>
-					<MenuItem onClick={() => navigate('/board')}>Board</MenuItem>
-					<MenuItem onClick={() => navigate('/user')}>UserPage</MenuItem>
-					<MenuItem onClick={() => navigate('/setting')}>Settings</MenuItem>
+					<MenuItem selected={selectedMenu === '/'} onClick={() => navigate('/')}>
+						Dashboard
+					</MenuItem>
+					<MenuItem selected={selectedMenu === '/board'} onClick={() => navigate('/board')}>
+						Board
+					</MenuItem>
+					<MenuItem selected={selectedMenu === '/user'} onClick={() => navigate('/user')}>
+						UserPage
+					</MenuItem>
+					<MenuItem selected={selectedMenu === '/setting'} onClick={() => navigate('/setting')}>
+						Settings
+					</MenuItem>
 				</MenuList>
 				<LogoutBtn onClick={handleLogout}>Log out</LogoutBtn>
 			</Sidebar>
@@ -35,10 +50,11 @@ export default MainLayout;
 const LayoutWrapper = styled.div`
 	display: flex;
 	height: 100vh;
+	overflow: hidden;
 `;
 
 const Sidebar = styled.nav`
-	width: 24rem;
+	width: 10%;
 	flex-direction: column;
 
 	background-color: #ffffff;
@@ -52,9 +68,10 @@ const Sidebar = styled.nav`
 `;
 
 const Logo = styled.h1`
-	font-size: 2rem;
-	font-weight: 700;
+	font-size: 3rem;
+	font-weight: 600;
 	margin-bottom: 40px;
+	color: ${({ theme }) => theme.colors.title};
 `;
 
 const MenuList = styled.div`
@@ -63,20 +80,23 @@ const MenuList = styled.div`
 	gap: 10px;
 `;
 
-const MenuItem = styled.button`
-	height: 4rem;
+const MenuItem = styled.button<{ selected?: boolean }>`
+	height: 5rem;
 	width: 100%;
 	background: none;
 	border: none;
+	border-radius: 5px;
 
-	font-size: 1.6rem;
-	color: gray;
+	font-size: 2rem;
+	color: ${({ theme, selected }) => (selected ? theme.colors.title : theme.colors.secondaryText)};
 	text-align: left;
 	cursor: pointer;
 
+	background-color: ${({ theme, selected }) => (selected ? theme.colors.hover : 'transparent')};
+
 	&:hover {
-		color: black;
-		background-color: rgba(67, 145, 237, 0.1);
+		color: ${({ theme }) => theme.colors.title};
+		background-color: ${({ theme }) => theme.colors.hover};
 	}
 `;
 
@@ -85,8 +105,8 @@ const LogoutBtn = styled.button`
 	bottom: 20px;
 	background: none;
 	border: none;
-	font-size: 1.6rem;
-	color: #000;
+	font-size: 2rem;
+	color: ${({ theme }) => theme.colors.primaryText};
 	cursor: pointer;
 	text-align: left;
 `;
@@ -94,5 +114,5 @@ const LogoutBtn = styled.button`
 const Content = styled.main`
 	flex-grow: 1;
 	padding: 40px;
-	background: #f5f6fa;
+	background: ${({ theme }) => theme.colors.background};
 `;

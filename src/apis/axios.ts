@@ -1,7 +1,8 @@
 import axios from 'axios';
 
+const API_URL = 'http://kulift.com/api';
 const instance = axios.create({
-  baseURL: 'http://kulift.com/api',
+  baseURL: API_URL,
 });
 
 instance.interceptors.request.use(config => {

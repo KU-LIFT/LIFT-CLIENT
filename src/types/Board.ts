@@ -1,11 +1,4 @@
-import { CardStatusType } from '@/types/Card';
-
-export type CardType = {
-	status: CardStatusType;
-	title: string;
-	description: string;
-	assignee?: string;
-};
+import { CardType } from '@/types/Card';
 
 export type BoardType = {
 	title: string;

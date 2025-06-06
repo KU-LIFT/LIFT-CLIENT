@@ -5,3 +5,13 @@ export const CardStatusMap: Record<CardStatusType, { text: string }> = {
 	IN_PROGRESS: { text: '진행 중' },
 	DONE: { text: '완료됨' },
 };
+
+export type CardType = {
+	id: number;
+	status: CardStatusType;
+	title: string;
+	description: string;
+	assignee?: string;
+	createdAt?: string; // (ex: "2025-05-01")
+	updatedAt?: string; // (ex: "2025-05-01")
+};

@@ -7,10 +7,11 @@ export const CardStatusMap: Record<CardStatusType, { text: string }> = {
 };
 
 export type CardType = {
+	id: number;
 	status: CardStatusType;
 	title: string;
 	description: string;
 	assignee?: string;
-	createdAt: string; // (ex: "2025-05-01")
-	updatedAt: string; // (ex: "2025-05-01")
+	createdAt?: string; // (ex: "2025-05-01")
+	updatedAt?: string; // (ex: "2025-05-01")
 };

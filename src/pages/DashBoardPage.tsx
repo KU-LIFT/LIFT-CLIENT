@@ -74,7 +74,7 @@ function ProjectListPage() {
 					{isLoading && <div>로딩 중...</div>}
 					{isError && <div>프로젝트 불러오기 실패</div>}
 					{projects &&
-						projects.map((project, i) => (
+						projects.map((project) => (
 							<ProjectWrapper key={project.projectKey}>
 								<ProjectItem>
 									<ProjectColorWrapper>

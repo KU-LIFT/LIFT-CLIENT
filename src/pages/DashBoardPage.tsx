@@ -1,10 +1,65 @@
+import { useUserProjects, useCreateProject, useDeleteProject, useUpdateProject } from '@/apis/project/query';
 import CardStatus from '@/components/CardStatus';
 import IconButton from '@/components/common/IconButton';
 import Tag from '@/components/common/Tag';
-import { projectsdummy, recentIssuesdummy } from '@/datas/dummyData';
+import CreateProjectModal from '@/components/ProjectCreateModal';
+import { recentIssuesdummy } from '@/datas/dummyData';
+import { Project } from '@/types/Project';
 import styled from '@emotion/styled';
+import { useState } from 'react';
 
 function ProjectListPage() {
+	const handleInstallClick = (projectKey: string) => {
+		window.open(`https://github.com/apps/kulift/installations/new?state=${projectKey}`, '_blank');
+	};
+
+	const [showModal, setShowModal] = useState(false);
+
+	const handleAddProject = () => setShowModal(true);
+
+	const { mutate } = useCreateProject();
+	const handleCreateProject = (project: Project) => {
+		mutate({
+			projectKey: project.projectKey,
+			name: project.name,
+			description: project.description,
+		});
+	};
+
+	const { data: projects, isLoading, isError } = useUserProjects();
+	const { mutate: deleteProject } = useDeleteProject();
+
+	const handleDeleteProject = (projectKey: string) => {
+		if (window.confirm('정말 삭제하시겠습니까?')) {
+			deleteProject(projectKey);
+		}
+	};
+
+	const { mutate: updateProject } = useUpdateProject();
+
+	const [editTarget, setEditTarget] = useState<Project | null>(null);
+	// 수정 버튼 클릭 시
+	const handleEditProject = (project: Project) => {
+		setEditTarget(project);
+	};
+
+	// 수정 모달에서 저장 클릭 시
+	const handleUpdateProject = (project: Project) => {
+		updateProject(
+			{
+				projectKey: project.projectKey,
+				name: project.name,
+				description: project.description,
+			},
+			{
+				onSuccess: () => setEditTarget(null),
+				onError: (err) => {
+					console.error('수정 실패:', err);
+					alert('수정 실패!');
+				},
+			}
+		);
+	};
 	return (
 		<DashboardLayout>
 			<PageTitle>내 작업</PageTitle>
@@ -12,27 +67,50 @@ function ProjectListPage() {
 			<Section>
 				<SectionHeader>
 					<SectionTitle>최근 프로젝트</SectionTitle>
-					<IconButton type="normal" iconName="IcnPlus" />
+					<IconButton type="normal" iconName="IcnPlus" onClick={handleAddProject} />
+					{showModal && <CreateProjectModal onClose={() => setShowModal(false)} onCreate={handleCreateProject} />}
 				</SectionHeader>
 				<ProjectListContainer>
-					{projectsdummy.map((project, i) => (
-						<ProjectWrapper key={i}>
-							<ProjectItem>
-								<ProjectColorWrapper>
-									<ProjectColor style={{ background: project.color }} />
-								</ProjectColorWrapper>
-								<ProjectInfoConatiner>
-									<Tag name="tag" />
-									<ProjectIntoTitle>{project.title}</ProjectIntoTitle>
-									<ProjectInfoDesc>{project.description}</ProjectInfoDesc>
-								</ProjectInfoConatiner>
-								<IconBtnWrapper>
-									<IconButton type="normal" iconName="IcnPlus" />
-								</IconBtnWrapper>
-							</ProjectItem>
-						</ProjectWrapper>
-					))}
+					{isLoading && <div>로딩 중...</div>}
+					{isError && <div>프로젝트 불러오기 실패</div>}
+					{projects &&
+						projects.map((project) => (
+							<ProjectWrapper key={project.projectKey}>
+								<ProjectItem>
+									<ProjectColorWrapper>
+										<ProjectColor style={{ background: '#c6f7e9' }} />
+									</ProjectColorWrapper>
+									<ProjectInfoConatiner>
+										<Tag name="tag" />
+										<ProjectIntoTitle>{project.name}</ProjectIntoTitle>
+										<ProjectInfoDesc>{project.description}</ProjectInfoDesc>
+									</ProjectInfoConatiner>
+									<IconBtnWrapper>
+										<IconButton
+											type="normal"
+											iconName="IcnPlus"
+											onClick={() => handleInstallClick(project.projectKey)}
+										/>
+										<IconButton
+											type="normal"
+											iconName="IcnDelete"
+											onClick={() => handleDeleteProject(project.projectKey)}
+										/>
+										<IconButton type="normal" iconName="IcnModify" onClick={() => handleEditProject(project)} />
+									</IconBtnWrapper>
+								</ProjectItem>
+							</ProjectWrapper>
+						))}
 				</ProjectListContainer>
+				{/* 수정 모달 */}
+				{editTarget && (
+					<CreateProjectModal
+						defaultValue={editTarget}
+						onClose={() => setEditTarget(null)}
+						onCreate={handleUpdateProject}
+						isEdit
+					/>
+				)}
 			</Section>
 
 			<Section>

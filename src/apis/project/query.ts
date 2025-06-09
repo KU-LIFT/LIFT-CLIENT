@@ -1,8 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getProject, getUserProjects } from './getProject/axios';
-import createProject from './createProject/axios';
-import { updateProject } from './updateProject/axios';
-import { deleteProject } from './deleteProject/axios';
+import { getUserProjects } from '@/apis/project/axios';
+import { createProject, deleteProject, getProject, updateProject } from '@/apis/project/axios';
 
 // 전체 프로젝트 리스트
 export const useUserProjects = () =>

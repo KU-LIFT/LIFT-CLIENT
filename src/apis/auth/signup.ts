@@ -1,7 +1,7 @@
 import { isAxiosError } from 'axios';
-import instance from '../axios';
-import { SignupRequest } from '../auth/authInterface';
-import MESSAGES from '../messages';
+import instance from '@/apis/instance';
+import { SignupRequest } from '@/apis/auth/authInterface';
+import MESSAGES from '@/apis/messages';
 
 const AUTH_URL = {
 	SIGNUP: '/auth/signup',

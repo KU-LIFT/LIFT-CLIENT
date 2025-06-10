@@ -1,5 +1,6 @@
 import color from './color';
 import colorToken from './colorToken';
+import font from './font';
 
 export const theme = {
 	colors: {
@@ -50,6 +51,7 @@ export const theme = {
 
 	colorToken,
 	color,
+	font,
 };
 
 export type ThemeType = typeof theme;

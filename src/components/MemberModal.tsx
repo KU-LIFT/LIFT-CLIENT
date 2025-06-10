@@ -12,7 +12,7 @@ type Props = {
 
 const MemberModal = ({ open, onClose }: Props) => {
 	const projectKey = useProjectKeyStore((s) => s.projectKey);
-	const { data: members, refetch } = useGetMembers(projectKey);
+	const { data: members } = useGetMembers(projectKey);
 
 	// 로그 찍기
 	useEffect(() => {

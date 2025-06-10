@@ -42,13 +42,6 @@ const ProjectDetailModal = ({ onClose, onCreate, defaultValue, isEdit }: Props) 
 		onClose();
 	};
 
-	interface Member {
-		id: number;
-		email: string;
-		name: string;
-		role: string;
-	}
-
 	return (
 		<BackDrop>
 			<ModalLayout>
@@ -129,11 +122,6 @@ const FirstContainer = styled.div`
 const Title = styled.p`
 	font-size: 2.4rem;
 	font-weight: 600;
-`;
-
-const SubTitle = styled.p`
-	font-size: 1.8rem;
-	font-weight: 500;
 `;
 
 const Wrapper = styled.div`

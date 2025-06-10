@@ -10,8 +10,12 @@ import useProjectKeyStore from '@/stores/useProjectKeyStore';
 import { Project } from '@/types/Project';
 import styled from '@emotion/styled';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function ProjectListPage() {
+	const navigate = useNavigate();
+
+	// GitHub 앱 설치 링크를 클릭했을 때
 	const handleInstallClick = (projectKey: string) => {
 		window.open(`https://github.com/apps/kulift/installations/new?state=${projectKey}`, '_blank');
 	};
@@ -85,7 +89,12 @@ function ProjectListPage() {
 					{projects &&
 						projects.map((project) => (
 							<ProjectWrapper key={project.projectKey}>
-								<ProjectItem>
+								<ProjectItem
+									onClick={() => {
+										useProjectKeyStore.setState({ projectKey: project.projectKey });
+										navigate('/board');
+									}}
+								>
 									<ProjectColorWrapper>
 										<ProjectColor style={{ background: '#c6f7e9' }} />
 									</ProjectColorWrapper>

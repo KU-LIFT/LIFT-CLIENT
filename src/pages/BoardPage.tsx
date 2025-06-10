@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import {
 	DndContext,
@@ -11,22 +11,36 @@ import {
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 
-import { BoardType } from '@/types/Board';
-import { CardType, CardStatusType } from '@/types/Card';
-import { dummyBoards } from '@/datas/dummyData';
+import { CardType } from '@/types/Card';
 import Card from '@/components/Card';
 import IconButton from '@/components/common/IconButton';
 import AIChatModal from '@/components/AIChatModal';
 import CardDetailModal from '@/components/CardDetailModal';
+import useProjectKeyStore from '@/stores/useProjectKeyStore';
+import { useBoards } from '@/apis/board/query';
+import { BoardsType, BoardType } from '@/types/Board';
 
-type Props = { boards?: BoardType[] };
-const COLUMN_STATUS_MAP: CardStatusType[] = ['TODO', 'IN_PROGRESS', 'DONE'];
+const BoardPage = () => {
+	const projectKey = useProjectKeyStore((store) => store.projectKey);
 
-const BoardPage = ({ boards = dummyBoards }: Props) => {
+	const { data: boardsData, isLoading, isError } = useBoards(projectKey);
+
+	useEffect(() => {
+		console.log('getBoards result:', boardsData);
+		if (boardsData && boardsData.length > 0) {
+			console.log('getBoards 이름:', boardsData[0].name);
+			console.log(
+				'getBoards 컬럼:',
+				boardsData.map((board: BoardsType) => board.columns)
+			);
+		}
+	}, [boardsData]);
+
+	const boardState = boardsData?.[0]?.columns ?? [];
+
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 	const [selectedCard, setSelectedCard] = useState<CardType | null>(null);
-	const [boardState, setBoardState] = useState<BoardType[]>(boards);
 	const [activeCard, setActiveCard] = useState<CardType | null>(null);
 	const [activeCardId, setActiveCardId] = useState<number | null>(null);
 
@@ -68,21 +82,16 @@ const BoardPage = ({ boards = dummyBoards }: Props) => {
 			}
 		});
 		if (fromBoardIdx === -1 || fromCardIdx === -1) return;
-
-		setBoardState((prev) => {
-			const newBoards = prev.map((b) => ({ ...b, cards: [...b.cards] }));
-			const [movedCard] = newBoards[fromBoardIdx].cards.splice(fromCardIdx, 1);
-			const newStatus = COLUMN_STATUS_MAP[toBoardIdx];
-			const updatedCard = { ...movedCard, status: newStatus };
-			newBoards[toBoardIdx].cards.push(updatedCard);
-			return newBoards;
-		});
 	};
+
+	if (isLoading) return <div>로딩 중...</div>;
+	if (isError) return <div>에러 발생</div>;
+	if (!boardsData || boardsData.length === 0) return <div>데이터 없음</div>;
 
 	return (
 		<BoardPageLayout>
 			<BoardPageHeader>
-				<BoardPageTitle>IOOB 프로젝트</BoardPageTitle>
+				<BoardPageTitle>{boardsData[0].name}</BoardPageTitle>
 				<IconButton type="normal" iconName="IcnPlus" size="big" onClick={openAIChatModal} />
 			</BoardPageHeader>
 			<DndContext
@@ -99,19 +108,19 @@ const BoardPage = ({ boards = dummyBoards }: Props) => {
 				}}
 			>
 				<BoardContainer>
-					{boardState.map((board, boardIdx) => (
-						<ColumnDroppable key={boardIdx} id={boardIdx}>
+					{boardState.map((board: BoardType) => (
+						<ColumnDroppable key={board.id} id={board.id}>
 							<BoardItem>
 								<BoardHeader>
-									<BoardTitle>{board.title}</BoardTitle>
+									<BoardTitle>{board.name}</BoardTitle>
 									<IconButton type="normal" iconName="IcnPlus" />
 								</BoardHeader>
-								<CardListContainer>
+								{/* <CardListContainer>
 									{board.cards.map((card) => {
 										if (activeCardId === card.id) return null;
 										return <DraggableCard key={card.id} card={card} onClick={handleOpenModal} id={card.id} />;
 									})}
-								</CardListContainer>
+								</CardListContainer> */}
 							</BoardItem>
 						</ColumnDroppable>
 					))}
@@ -234,6 +243,6 @@ const CardListContainer = styled.div`
 	overflow-y: scroll;
 
 	&::-webkit-scrollbar {
-		display: none; 
+		display: none;
 	}
 `;

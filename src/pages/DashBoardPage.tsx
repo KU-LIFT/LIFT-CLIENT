@@ -1,9 +1,12 @@
 import { useUserProjects, useCreateProject, useDeleteProject, useUpdateProject } from '@/apis/project/query';
 import CardStatus from '@/components/CardStatus';
+import Button from '@/components/common/Button';
 import IconButton from '@/components/common/IconButton';
 import Tag from '@/components/common/Tag';
-import CreateProjectModal from '@/components/ProjectCreateModal';
+import MemberModal from '@/components/MemberModal';
+import ProjectDetailModal from '@/components/ProjectDetailModal';
 import { recentIssuesdummy } from '@/datas/dummyData';
+import useProjectKeyStore from '@/stores/useProjectKeyStore';
 import { Project } from '@/types/Project';
 import styled from '@emotion/styled';
 import { useState } from 'react';
@@ -60,15 +63,21 @@ function ProjectListPage() {
 			}
 		);
 	};
+
+	const [open, setOpen] = useState(false);
+
 	return (
 		<DashboardLayout>
+			<MemberModal open={open} onClose={() => setOpen(false)} />
+
 			<PageTitle>내 작업</PageTitle>
 
 			<Section>
 				<SectionHeader>
-					<SectionTitle>최근 프로젝트</SectionTitle>
+					{/* <SectionTitle>최근 프로젝트</SectionTitle> */}
+					<SectionTitle>프로젝트 관리</SectionTitle>
 					<IconButton type="normal" iconName="IcnPlus" onClick={handleAddProject} />
-					{showModal && <CreateProjectModal onClose={() => setShowModal(false)} onCreate={handleCreateProject} />}
+					{showModal && <ProjectDetailModal onClose={() => setShowModal(false)} onCreate={handleCreateProject} />}
 				</SectionHeader>
 				<ProjectListContainer>
 					{isLoading && <div>로딩 중...</div>}
@@ -86,9 +95,17 @@ function ProjectListPage() {
 										<ProjectInfoDesc>{project.description}</ProjectInfoDesc>
 									</ProjectInfoConatiner>
 									<IconBtnWrapper>
-										<IconButton
-											type="normal"
-											iconName="IcnPlus"
+										<Button
+											type="outlined-primary"
+											label="멤버 관리"
+											onClick={() => {
+												useProjectKeyStore.setState({ projectKey: project.projectKey });
+												setOpen(true);
+											}}
+										/>
+										<Button
+											type="text-assistive"
+											label="GitHub 연결"
 											onClick={() => handleInstallClick(project.projectKey)}
 										/>
 										<IconButton
@@ -104,7 +121,7 @@ function ProjectListPage() {
 				</ProjectListContainer>
 				{/* 수정 모달 */}
 				{editTarget && (
-					<CreateProjectModal
+					<ProjectDetailModal
 						defaultValue={editTarget}
 						onClose={() => setEditTarget(null)}
 						onCreate={handleUpdateProject}
@@ -220,13 +237,14 @@ const ProjectInfoDesc = styled.p`
 
 const IconBtnWrapper = styled.div`
 	display: flex;
-	width: 36px;
-	height: 36px;
+	width: fit-content;
 	flex-direction: column;
 	justify-content: center;
-	align-items: center;
+	align-items: flex-end;
 
 	padding: 1rem;
+
+	gap: 0.8rem;
 `;
 
 const DashboardLayout = styled.div`

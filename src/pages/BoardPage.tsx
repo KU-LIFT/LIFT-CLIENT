@@ -17,18 +17,27 @@ import useProjectKeyStore from '@/stores/useProjectKeyStore';
 import { useBoards } from '@/apis/board/query';
 import { BoardType } from '@/types/Board';
 import { useGetTasks } from '@/apis/task/query';
-import Button from '@/components/common/Button';
 import TaskModal from '@/components/TaskModal';
 import { TaskType } from '@/types/TaskType';
 import { useMoveTask } from '@/apis/task/moveTask/query';
 import Column from '@/components/Column';
 import EditTaskModal from '@/components/EditTaskModal';
+import Button from '@/components/common/Button';
 
 function BoardPage() {
 	const projectKey = useProjectKeyStore((store) => store.projectKey);
 
 	// AI 모달
-	const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+	// BoardPage.tsx
+	const [aiModalColumnId, setAIModalColumnId] = useState<number | null>(null);
+
+	const handleOpenAIModal = (boardsId: number) => {
+		setAIModalColumnId(boardsId);
+	};
+	const handleCloseAIModal = () => {
+		setAIModalColumnId(null);
+	};
+
 	// 수동 Task 추가 모달
 	const [addModal, setAddModal] = useState<{ open: boolean; columnName: string; columnId: number }>({
 		open: false,
@@ -40,7 +49,6 @@ function BoardPage() {
 	const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
 
 	const handleTaskClick = (task: TaskType) => {
-		console.log(task.name, 'task 클릭');
 		setSelectedTask(task);
 		setIsEditModalOpen(true);
 	};
@@ -108,7 +116,11 @@ function BoardPage() {
 			<BoardPageLayout>
 				<BoardPageHeader>
 					<BoardPageTitle>{boardsData[0].name}</BoardPageTitle>
-					<Button type="outlined-assistive" label="Task 추가 With AI" onClick={() => setIsAIModalOpen(true)} />
+					<Button
+						type="outlined-assistive"
+						label="Task 추가 With AI"
+						onClick={() => handleOpenAIModal(boardsData[0].id)}
+					/>
 				</BoardPageHeader>
 
 				<BoardsContainer>
@@ -129,7 +141,7 @@ function BoardPage() {
 					})}
 				</BoardsContainer>
 
-				{isAIModalOpen && <AIChatModal onClose={() => setIsAIModalOpen(false)} />}
+				{aiModalColumnId !== null && <AIChatModal columnId={aiModalColumnId} onClose={handleCloseAIModal} />}
 				<TaskModal
 					open={addModal.open}
 					columnName={addModal.columnName}

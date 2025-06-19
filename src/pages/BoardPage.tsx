@@ -61,6 +61,7 @@ function BoardPage() {
 		setActiveTask(dragging);
 	};
 
+	const [hoverDisabled, setHoverDisabled] = useState(false);
 	// 드래그 종료 시
 	const handleDragEnd = (event: DragEndEvent) => {
 		const { active, over } = event;
@@ -76,6 +77,8 @@ function BoardPage() {
 		// 2) 서버에 백그라운드로 요청
 		moveTaskMutation.mutate({ taskId, columnId: newColumnId });
 		// 3) overlay 제거는 다음 프레임으로 딜레이
+		setHoverDisabled(true);
+		setTimeout(() => setHoverDisabled(false), 500);
 		requestAnimationFrame(() => setActiveTask(null));
 	};
 
@@ -108,6 +111,7 @@ function BoardPage() {
 								board={board}
 								tasks={tasksForColumn}
 								onOpenAddModal={(name, id) => setAddModal({ open: true, columnName: name, columnId: id })}
+								hoverDisabled={hoverDisabled}
 							/>
 						);
 					})}

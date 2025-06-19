@@ -9,9 +9,10 @@ type ColumnProps = {
 	board: BoardType;
 	tasks: Array<Task>;
 	onOpenAddModal: (columnName: string, columnId: number) => void;
+	hoverDisabled: boolean;
 };
 
-function Column({ board, tasks, onOpenAddModal }: ColumnProps) {
+function Column({ board, tasks, onOpenAddModal, hoverDisabled }: ColumnProps) {
 	const { setNodeRef } = useDroppable({ id: board.id.toString() });
 
 	return (
@@ -23,7 +24,7 @@ function Column({ board, tasks, onOpenAddModal }: ColumnProps) {
 
 			<CardListContainer>
 				{tasks.map((task) => (
-					<TaskDraggable key={task.id} task={task} />
+					<TaskDraggable key={task.id} task={task} hoverDisabled={hoverDisabled} />
 				))}
 			</CardListContainer>
 		</BoardItem>

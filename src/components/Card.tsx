@@ -1,18 +1,30 @@
-import { CardType } from '@/types/Card';
 import styled from '@emotion/styled';
-import CardStatus from './CardStatus';
+import { Task } from '@/types/Task';
+import IconButton from './common/IconButton';
+import { useDeleteTask } from '@/apis/task/query';
+import useProjectKeyStore from '@/stores/useProjectKeyStore';
 
 type CardProps = {
-	onClick: (card: CardType) => void;
-	card: CardType;
+	onClick?: (card: Task) => void;
+	card: Task;
 };
 
 const Card = ({ card, onClick }: CardProps) => {
+	const projectKey = useProjectKeyStore((store) => store.projectKey);
+
+	const deleteTaskMutation = useDeleteTask(projectKey);
+
 	return (
-		<CardLayout onClick={() => onClick(card)}>
-			<CardStatus status={card.status} />
-			<CardTitle>{card.title}</CardTitle>
+		<CardLayout>
+			<CardTitle>{card.name}</CardTitle>
 			<CardDescription>{card.description}</CardDescription>
+			<IconButton
+				type="outlined"
+				iconName="IcnDelete"
+				onClick={() => {
+					deleteTaskMutation.mutate(card.id);
+				}}
+			/>
 		</CardLayout>
 	);
 };

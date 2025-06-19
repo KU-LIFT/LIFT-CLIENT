@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import styled from '@emotion/styled';
-import CardStatus from './CardStatus';
 import Icon from './common/Icon';
 
 type Issue = {
@@ -163,7 +162,6 @@ const AIChatModal = ({ onClose }: { onClose: () => void }) => {
 						<IssueList>
 							{issues.map((issue) => (
 								<CardItem key={issue.id}>
-									<CardStatus status="TODO" />
 									<CardTitle>{issue.name}</CardTitle>
 									<CardDescription>{issue.description}</CardDescription>
 								</CardItem>

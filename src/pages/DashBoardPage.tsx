@@ -1,5 +1,4 @@
 import { useUserProjects, useCreateProject, useDeleteProject, useUpdateProject } from '@/apis/project/query';
-import CardStatus from '@/components/CardStatus';
 import Button from '@/components/common/Button';
 import IconButton from '@/components/common/IconButton';
 import Tag from '@/components/common/Tag';
@@ -151,7 +150,6 @@ function ProjectListPage() {
 								<IssueTitle>{issue.title}</IssueTitle>
 								<IssueTag>IOOB 프로젝트</IssueTag>
 							</IssueTextContainer>
-							<CardStatus status={issue.status} />
 						</IssueItem>
 					))}
 				</IssueListContainer>

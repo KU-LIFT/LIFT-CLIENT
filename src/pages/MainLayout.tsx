@@ -14,6 +14,7 @@ function MainLayout() {
 	const handleLogout = () => {
 		localStorage.removeItem('access_token');
 		localStorage.removeItem('refresh_token');
+		localStorage.removeItem('projectKey');
 		navigate('/login');
 	};
 
@@ -23,7 +24,7 @@ function MainLayout() {
 				<Logo>LIFT</Logo>
 				<MenuList>
 					<MenuItem selected={selectedMenu === '/'} onClick={() => navigate('/')}>
-						Dashboard
+						Home
 					</MenuItem>
 					<MenuItem selected={selectedMenu === '/board'} onClick={() => navigate('/board')}>
 						Board

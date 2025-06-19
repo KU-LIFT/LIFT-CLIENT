@@ -1,6 +1,10 @@
-import { CardType } from '@/types/Card';
+export type BoardsType = {
+	id: number;
+	title: string;
+	columns: BoardType;
+};
 
 export type BoardType = {
-	title: string;
-	cards: CardType[];
+	id: number;
+	name: string;
 };

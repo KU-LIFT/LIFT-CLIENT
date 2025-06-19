@@ -91,7 +91,7 @@ function ProjectListPage() {
 							<ProjectWrapper key={project.projectKey}>
 								<ProjectItem
 									onClick={() => {
-										useProjectKeyStore.setState({ projectKey: project.projectKey });
+										useProjectKeyStore.getState().setProjectKey(project.projectKey);
 										navigate('/board');
 									}}
 								>

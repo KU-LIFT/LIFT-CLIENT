@@ -1,5 +1,5 @@
 import styled from '@emotion/styled';
-import { Task } from '@/types/Task';
+import { TaskType } from '@/types/TaskType';
 import { BoardType } from '@/types/Board';
 import { useDroppable } from '@dnd-kit/core';
 import Button from '@/components/common/Button';
@@ -7,9 +7,9 @@ import TaskDraggable from '@/components/TaskDraggable';
 
 type ColumnProps = {
 	board: BoardType;
-	tasks: Array<Task>;
+	tasks: Array<TaskType>;
 	onOpenAddModal: (columnName: string, columnId: number) => void;
-	onTaskClick: (task: Task) => void;
+	onTaskClick: (task: TaskType) => void;
 	hoverDisabled: boolean;
 };
 

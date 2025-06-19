@@ -1,15 +1,15 @@
 import styled from '@emotion/styled';
-import { Task } from '@/types/Task';
+import { TaskType } from '@/types/TaskType';
 import IconButton from './common/IconButton';
 import { useDeleteTask } from '@/apis/task/query';
 import useProjectKeyStore from '@/stores/useProjectKeyStore';
 
-type CardProps = {
-	onTaskClick?: (task: Task) => void;
-	task: Task;
+type TaskProps = {
+	onTaskClick?: (task: TaskType) => void;
+	task: TaskType;
 };
 
-function Card({ task, onTaskClick }: CardProps) {
+function Task({ task, onTaskClick }: TaskProps) {
 	const projectKey = useProjectKeyStore((store) => store.projectKey);
 	const deleteTaskMutation = useDeleteTask(projectKey);
 
@@ -20,26 +20,26 @@ function Card({ task, onTaskClick }: CardProps) {
 		}
 	};
 	return (
-		<CardLayout
+		<TaskLayout
 			onClick={(e: React.MouseEvent<HTMLDivElement>) => {
 				e.stopPropagation();
 				onTaskClick?.(task);
 			}}
 		>
 			<Container>
-				<CardTitle>{task.name}</CardTitle>
-				<CardDescription>{task.description}</CardDescription>
+				<TaskTitle>{task.name}</TaskTitle>
+				<TaskDescription>{task.description}</TaskDescription>
 			</Container>
 			<div onClick={handleDeleteClick}>
 				<IconButton type="outlined" iconName="IcnDelete" />
 			</div>
-		</CardLayout>
+		</TaskLayout>
 	);
 }
 
-export default Card;
+export default Task;
 
-const CardLayout = styled.div`
+const TaskLayout = styled.div`
 	width: 34rem;
 	height: 14rem;
 	display: flex;
@@ -58,13 +58,13 @@ const CardLayout = styled.div`
 	gap: 1.5rem;
 `;
 
-const CardTitle = styled.p`
+const TaskTitle = styled.p`
 	font-size: 2rem;
 	font-weight: 500;
 	color: ${({ theme }) => theme.colors.title};
 `;
 
-const CardDescription = styled.p`
+const TaskDescription = styled.p`
 	font-size: 1.6rem;
 	font-weight: 400;
 	line-height: 2.4rem;

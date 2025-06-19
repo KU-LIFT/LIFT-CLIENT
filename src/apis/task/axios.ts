@@ -1,18 +1,18 @@
 import instance from '@/apis/instance';
 import { CreateTaskRequest, MoveTaskRequest, UpdateTaskRequest } from './Task';
-import { Task } from '@/types/Task';
+import { TaskType } from '@/types/TaskType';
 
-export const getTasks = async (projectKey: string): Promise<Task[]> => {
+export const getTasks = async (projectKey: string): Promise<TaskType[]> => {
 	const { data } = await instance.get(`/projects/${projectKey}/tasks`);
 	return data;
 };
 
-export const getTask = async (projectKey: string, taskId: number): Promise<Task> => {
+export const getTask = async (projectKey: string, taskId: number): Promise<TaskType> => {
 	const { data } = await instance.get(`/projects/${projectKey}/tasks/${taskId}`);
 	return data;
 };
 
-export const createTask = async (projectKey: string, task: CreateTaskRequest): Promise<Task> => {
+export const createTask = async (projectKey: string, task: CreateTaskRequest): Promise<TaskType> => {
 	console.log('>>> createTask 요청', {
 		url: `/projects/${projectKey}/tasks`,
 		body: task,
@@ -21,7 +21,7 @@ export const createTask = async (projectKey: string, task: CreateTaskRequest): P
 	return data;
 };
 
-export const updateTask = async (projectKey: string, taskId: number, task: UpdateTaskRequest): Promise<Task> => {
+export const updateTask = async (projectKey: string, taskId: number, task: UpdateTaskRequest): Promise<TaskType> => {
 	const { data } = await instance.put(`/projects/${projectKey}/tasks/${taskId}`, task);
 	return data;
 };

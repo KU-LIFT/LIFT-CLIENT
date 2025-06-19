@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { moveTask } from '@/apis/task/axios';
-import { Task } from '@/types/Task';
+import { TaskType } from '@/types/TaskType';
 
 export const useMoveTask = (projectKey: string) => {
 	const queryClient = useQueryClient();
@@ -13,11 +13,11 @@ export const useMoveTask = (projectKey: string) => {
 			await queryClient.cancelQueries({ queryKey: ['tasks', projectKey] });
 
 			// 2) 이전 데이터 스냅샷
-			const previousTasks = queryClient.getQueryData<Task[]>(['tasks', projectKey]);
+			const previousTasks = queryClient.getQueryData<TaskType[]>(['tasks', projectKey]);
 
 			// 3) 캐시를 즉시 업데이트
 			if (previousTasks) {
-				queryClient.setQueryData<Task[]>(
+				queryClient.setQueryData<TaskType[]>(
 					['tasks', projectKey],
 					previousTasks.map((t) => (t.id === taskId ? { ...t, columnId } : t))
 				);

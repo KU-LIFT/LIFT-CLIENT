@@ -1,12 +1,12 @@
 import styled from '@emotion/styled';
-import { Task } from '@/types/Task';
+import { TaskType } from '@/types/TaskType';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import Card from '@/components/Card';
+import Card from '@/components/Task';
 
 type TaskDraggableProps = {
-	task: Task;
-	onTaskClick: (task: Task) => void;
+	task: TaskType;
+	onTaskClick: (task: TaskType) => void;
 	hoverDisabled: boolean;
 };
 

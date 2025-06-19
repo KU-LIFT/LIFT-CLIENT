@@ -11,7 +11,7 @@ import {
 	DragStartEvent,
 } from '@dnd-kit/core';
 
-import Card from '@/components/Card';
+import Card from '@/components/Task';
 import AIChatModal from '@/components/AIChatModal';
 import useProjectKeyStore from '@/stores/useProjectKeyStore';
 import { useBoards } from '@/apis/board/query';
@@ -19,7 +19,7 @@ import { BoardType } from '@/types/Board';
 import { useGetTasks } from '@/apis/task/query';
 import Button from '@/components/common/Button';
 import TaskModal from '@/components/TaskModal';
-import { Task } from '@/types/Task';
+import { TaskType } from '@/types/TaskType';
 import { useMoveTask } from '@/apis/task/moveTask/query';
 import Column from '@/components/Column';
 import EditTaskModal from '@/components/EditTaskModal';
@@ -37,9 +37,9 @@ function BoardPage() {
 	});
 	// task edit 모달
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-	const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+	const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
 
-	const handleTaskClick = (task: Task) => {
+	const handleTaskClick = (task: TaskType) => {
 		console.log(task.name, 'task 클릭');
 		setSelectedTask(task);
 		setIsEditModalOpen(true);
@@ -48,11 +48,11 @@ function BoardPage() {
 	// 데이터 조회
 	const { data: boardsData, isLoading, isError } = useBoards(projectKey);
 	const { data: tasksData } = useGetTasks(projectKey);
-	const [localTasks, setLocalTasks] = useState<Task[]>([]);
+	const [localTasks, setLocalTasks] = useState<TaskType[]>([]);
 	const moveTaskMutation = useMoveTask(projectKey);
 
 	// 현재 드래그 중인 task
-	const [activeTask, setActiveTask] = useState<Task | null>(null);
+	const [activeTask, setActiveTask] = useState<TaskType | null>(null);
 
 	useEffect(() => {
 		if (!activeTask) {
@@ -68,7 +68,7 @@ function BoardPage() {
 	const handleDragStart = (event: DragStartEvent) => {
 		const activeId = event.active.id;
 		const taskId = typeof activeId === 'string' ? Number(activeId) : activeId;
-		const dragging = tasksData?.find((task: Task) => task.id === taskId) ?? null;
+		const dragging = tasksData?.find((task: TaskType) => task.id === taskId) ?? null;
 		setActiveTask(dragging);
 	};
 

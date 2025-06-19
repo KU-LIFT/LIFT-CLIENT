@@ -2,11 +2,11 @@ import { useState } from 'react';
 import styled from '@emotion/styled';
 import { useUpdateTask } from '@/apis/task/query';
 import useProjectKeyStore from '@/stores/useProjectKeyStore';
-import { Task } from '@/types/Task';
+import { TaskType } from '@/types/TaskType';
 import { UpdateTaskRequest } from '@/apis/task/Task';
 import useUserStore from '@/stores/useUserStore';
 
-const EditTaskModal = ({ open, task, onClose }: { open: boolean; task: Task; onClose: () => void }) => {
+const EditTaskModal = ({ open, task, onClose }: { open: boolean; task: TaskType; onClose: () => void }) => {
 	const projectKey = useProjectKeyStore((store) => store.projectKey);
 	const [name, setName] = useState(task.name);
 	const [description, setDescription] = useState(task.description);

@@ -6,8 +6,11 @@ type ProjectKeyState = {
 };
 
 const useProjectKeyStore = create<ProjectKeyState>((set) => ({
-	projectKey: '',
-	setProjectKey: (key) => set({ projectKey: key }),
+	projectKey: localStorage.getItem('projectKey') || '',
+	setProjectKey: (key) => {
+		localStorage.setItem('projectKey', key);
+		set({ projectKey: key });
+	},
 }));
 
 export default useProjectKeyStore;

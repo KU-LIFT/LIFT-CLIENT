@@ -6,10 +6,11 @@ import Card from '@/components/Card';
 
 type TaskDraggableProps = {
 	task: Task;
+	onTaskClick: (task: Task) => void;
 	hoverDisabled: boolean;
 };
 
-function TaskDraggable({ task, hoverDisabled }: TaskDraggableProps) {
+function TaskDraggable({ task, onTaskClick, hoverDisabled }: TaskDraggableProps) {
 	const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
 		id: task.id.toString(),
 	});
@@ -28,7 +29,7 @@ function TaskDraggable({ task, hoverDisabled }: TaskDraggableProps) {
 
 	return (
 		<DraggableWrapper ref={setNodeRef} style={style} hoverDisabled={hoverDisabled} {...listeners} {...attributes}>
-			<Card card={task} />
+			<Card task={task} onTaskClick={onTaskClick} />
 		</DraggableWrapper>
 	);
 }

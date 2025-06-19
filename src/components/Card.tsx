@@ -5,29 +5,37 @@ import { useDeleteTask } from '@/apis/task/query';
 import useProjectKeyStore from '@/stores/useProjectKeyStore';
 
 type CardProps = {
-	onClick?: (card: Task) => void;
-	card: Task;
+	onTaskClick?: (task: Task) => void;
+	task: Task;
 };
 
-const Card = ({ card, onClick }: CardProps) => {
+function Card({ task, onTaskClick }: CardProps) {
 	const projectKey = useProjectKeyStore((store) => store.projectKey);
-
 	const deleteTaskMutation = useDeleteTask(projectKey);
 
+	const handleDeleteClick = (e: React.MouseEvent<HTMLDivElement>) => {
+		e.stopPropagation();
+		if (window.confirm('정말 이 태스크를 삭제하시겠습니까?')) {
+			deleteTaskMutation.mutate(task.id);
+		}
+	};
 	return (
-		<CardLayout>
-			<CardTitle>{card.name}</CardTitle>
-			<CardDescription>{card.description}</CardDescription>
-			<IconButton
-				type="outlined"
-				iconName="IcnDelete"
-				onClick={() => {
-					deleteTaskMutation.mutate(card.id);
-				}}
-			/>
+		<CardLayout
+			onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+				e.stopPropagation();
+				onTaskClick?.(task);
+			}}
+		>
+			<Container>
+				<CardTitle>{task.name}</CardTitle>
+				<CardDescription>{task.description}</CardDescription>
+			</Container>
+			<div onClick={handleDeleteClick}>
+				<IconButton type="outlined" iconName="IcnDelete" />
+			</div>
 		</CardLayout>
 	);
-};
+}
 
 export default Card;
 
@@ -35,8 +43,8 @@ const CardLayout = styled.div`
 	width: 34rem;
 	height: 14rem;
 	display: flex;
-	flex-direction: column;
-	justify-content: flex-start;
+	flex-direction: row;
+	justify-content: space-between;
 	align-items: flex-start;
 
 	border: 2px solid ${({ theme }) => theme.colors.border};
@@ -64,4 +72,10 @@ const CardDescription = styled.p`
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+`;
+
+const Container = styled.div`
+	display: flex;
+	flex-direction: column;
+	gap: 2rem;
 `;

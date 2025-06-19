@@ -22,6 +22,7 @@ import TaskModal from '@/components/TaskModal';
 import { Task } from '@/types/Task';
 import { useMoveTask } from '@/apis/task/moveTask/query';
 import Column from '@/components/Column';
+import EditTaskModal from '@/components/EditTaskModal';
 
 function BoardPage() {
 	const projectKey = useProjectKeyStore((store) => store.projectKey);
@@ -34,6 +35,15 @@ function BoardPage() {
 		columnName: '',
 		columnId: 0,
 	});
+	// task edit 모달
+	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+	const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
+	const handleTaskClick = (task: Task) => {
+		console.log(task.name, 'task 클릭');
+		setSelectedTask(task);
+		setIsEditModalOpen(true);
+	};
 
 	// 데이터 조회
 	const { data: boardsData, isLoading, isError } = useBoards(projectKey);
@@ -51,7 +61,8 @@ function BoardPage() {
 	}, [tasksData, activeTask]);
 
 	// DnD 센서 설정
-	const sensors = useSensors(useSensor(PointerSensor));
+
+	const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
 	// 드래그 시작 시
 	const handleDragStart = (event: DragStartEvent) => {
@@ -112,6 +123,7 @@ function BoardPage() {
 								tasks={tasksForColumn}
 								onOpenAddModal={(name, id) => setAddModal({ open: true, columnName: name, columnId: id })}
 								hoverDisabled={hoverDisabled}
+								onTaskClick={handleTaskClick}
 							/>
 						);
 					})}
@@ -124,12 +136,15 @@ function BoardPage() {
 					columnId={addModal.columnId}
 					onClose={() => setAddModal({ open: false, columnName: '', columnId: 0 })}
 				/>
+				{selectedTask && (
+					<EditTaskModal open={isEditModalOpen} task={selectedTask} onClose={() => setIsEditModalOpen(false)} />
+				)}
 			</BoardPageLayout>
 			{/* DragOverlay 에 activeTask가 있을 때만 렌더링 */}
 			<DragOverlay dropAnimation={{ duration: 0 }}>
 				{activeTask ? (
 					<OverlayWrapper>
-						<Card card={activeTask} />
+						<Card task={activeTask} />
 					</OverlayWrapper>
 				) : null}
 			</DragOverlay>

@@ -1,3 +1,4 @@
+import { useGetMe } from '@/apis/auth/getMe/query';
 import { useUserProjects, useCreateProject, useDeleteProject, useUpdateProject } from '@/apis/project/query';
 import Button from '@/components/common/Button';
 import IconButton from '@/components/common/IconButton';
@@ -6,13 +7,24 @@ import MemberModal from '@/components/MemberModal';
 import ProjectDetailModal from '@/components/ProjectDetailModal';
 import { recentIssuesdummy } from '@/datas/dummyData';
 import useProjectKeyStore from '@/stores/useProjectKeyStore';
+import useUserStore from '@/stores/useUserStore';
 import { Project } from '@/types/Project';
 import styled from '@emotion/styled';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function ProjectListPage() {
 	const navigate = useNavigate();
+
+	const { data: me } = useGetMe();
+	const setUserId = useUserStore((state) => state.setUserId);
+
+	useEffect(() => {
+		if (me) {
+			console.log(me);
+			setUserId(me.id);
+		}
+	}, [me, setUserId]);
 
 	// GitHub 앱 설치 링크를 클릭했을 때
 	const handleInstallClick = (projectKey: string) => {

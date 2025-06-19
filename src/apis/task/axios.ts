@@ -1,5 +1,6 @@
 import instance from '@/apis/instance';
-import { CreateTaskRequest, MoveTaskRequest, Task, UpdateTaskRequest } from './Task';
+import { CreateTaskRequest, MoveTaskRequest, UpdateTaskRequest } from './Task';
+import { Task } from '@/types/Task';
 
 export const getTasks = async (projectKey: string): Promise<Task[]> => {
 	const { data } = await instance.get(`/projects/${projectKey}/tasks`);

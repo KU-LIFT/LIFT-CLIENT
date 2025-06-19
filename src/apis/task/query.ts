@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createTask, deleteTask, getTask, getTasks, moveTask, updateTask } from './axios';
+import { createTask, deleteTask, getTask, getTasks, updateTask } from './axios';
 import { CreateTaskRequest, UpdateTaskRequest } from './Task';
 
 export const useTasks = (projectKey: string) =>

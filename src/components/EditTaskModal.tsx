@@ -9,7 +9,7 @@ import useUserStore from '@/stores/useUserStore';
 const EditTaskModal = ({ open, task, onClose }: { open: boolean; task: TaskType; onClose: () => void }) => {
 	const projectKey = useProjectKeyStore((store) => store.projectKey);
 	const [name, setName] = useState(task.name);
-	const [description, setDescription] = useState(task.description);
+	const [description, setDescription] = useState(task.description ?? '');
 	const updateTaskMutation = useUpdateTask(projectKey, task.id);
 
 	const currentUserId = useUserStore((state) => state.userId);
@@ -21,8 +21,6 @@ const EditTaskModal = ({ open, task, onClose }: { open: boolean; task: TaskType;
 			columnId: task.columnId,
 			assigneeId: currentUserId!,
 			priority: task.priority,
-			dueDate: task.dueDate,
-			tags: task.tags.length ? task.tags : [''],
 		};
 
 		updateTaskMutation.mutate(payload, {

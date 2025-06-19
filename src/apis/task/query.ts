@@ -2,14 +2,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createTask, deleteTask, getTask, getTasks, updateTask } from './axios';
 import { CreateTaskRequest, UpdateTaskRequest } from './Task';
 
-export const useTasks = (projectKey: string) =>
+export const useGetTasks = (projectKey: string) =>
 	useQuery({
 		queryKey: ['tasks', projectKey],
 		queryFn: () => getTasks(projectKey),
 		enabled: !!projectKey,
 	});
 
-export const useTask = (projectKey: string, taskId: number) =>
+export const useGetTask = (projectKey: string, taskId: number) =>
 	useQuery({
 		queryKey: ['task', projectKey, taskId],
 		queryFn: () => getTask(projectKey, taskId),

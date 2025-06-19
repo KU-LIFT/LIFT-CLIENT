@@ -16,7 +16,7 @@ import AIChatModal from '@/components/AIChatModal';
 import useProjectKeyStore from '@/stores/useProjectKeyStore';
 import { useBoards } from '@/apis/board/query';
 import { BoardType } from '@/types/Board';
-import { useTasks } from '@/apis/task/query';
+import { useGetTasks } from '@/apis/task/query';
 import Button from '@/components/common/Button';
 import TaskModal from '@/components/TaskModal';
 import { Task } from '@/types/Task';
@@ -47,7 +47,7 @@ function BoardPage() {
 
 	// 데이터 조회
 	const { data: boardsData, isLoading, isError } = useBoards(projectKey);
-	const { data: tasksData } = useTasks(projectKey);
+	const { data: tasksData } = useGetTasks(projectKey);
 	const [localTasks, setLocalTasks] = useState<Task[]>([]);
 	const moveTaskMutation = useMoveTask(projectKey);
 
@@ -68,7 +68,7 @@ function BoardPage() {
 	const handleDragStart = (event: DragStartEvent) => {
 		const activeId = event.active.id;
 		const taskId = typeof activeId === 'string' ? Number(activeId) : activeId;
-		const dragging = tasksData?.find((t) => t.id === taskId) ?? null;
+		const dragging = tasksData?.find((task: Task) => task.id === taskId) ?? null;
 		setActiveTask(dragging);
 	};
 

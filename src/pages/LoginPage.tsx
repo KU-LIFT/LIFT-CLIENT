@@ -6,6 +6,7 @@ import { AuthInput, AuthButton, AuthTitle, AuthInputContainer } from '@/componen
 import SignupModal from '@/components/SignupModal';
 import userLogin from '@/apis/auth/login';
 import { useNavigate } from 'react-router-dom';
+import MESSAGES from '@/apis/messages';
 
 const LoginPage = () => {
 	const navigate = useNavigate();
@@ -18,7 +19,7 @@ const LoginPage = () => {
 			const res = await userLogin({ email, password: pw });
 			localStorage.setItem('access_token', res.accessToken);
 			localStorage.setItem('refresh_token', res.refreshToken);
-			alert('로그인 성공!');
+			alert(MESSAGES.LOGIN.SUCCESS);
 			navigate('/');
 		} catch (err: any) {
 			alert(err?.response?.data?.message || err.message || '로그인 실패');

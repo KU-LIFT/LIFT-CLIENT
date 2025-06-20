@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import styled from '@emotion/styled';
-import Icon from './common/Icon';
 import { TaskType } from '@/types/TaskType';
 import { useImportTodosFromText } from '@/apis/ai/query';
 import useProjectKeyStore from '@/stores/useProjectKeyStore';
 import Task from './Task';
 import Button from './common/Button';
-import { css } from '@emotion/react';
+import IconButton from './common/IconButton';
 
 type AIChatModalProps = {
 	columnId: number;
@@ -28,177 +27,172 @@ const AIChatModal = ({ columnId, onClose }: AIChatModalProps) => {
 				onSuccess: (data) => {
 					setTasks(data);
 				},
-				onError: (e) => {
-					console.error(e);
-					// 에러 처리 UI 추가 가능
-				},
 			}
 		);
 	};
 
 	return (
-		<ModalOverlay>
-			<ModalContent>
+		<BackDrop onClick={(e) => (e.target === e.currentTarget ? onClose() : null)}>
+			<ModalContainer>
 				<ModalHeader>
-					<ModalTitle>AI 이슈 생성</ModalTitle>
-					<CloseButton onClick={onClose}>X</CloseButton>
+					<Title>AI로 태스크 생성</Title>
+					<IconButton type="normal" iconName="IcnX" onClick={onClose} />
 				</ModalHeader>
-
 				<ModalBody>
-					<InputContainer>
-						<TextArea placeholder="요구사항을 입력하세요..." value={input} onChange={(e) => setInput(e.target.value)} />
-						<GenerateButton onClick={handleGenerateIssues} disabled={isPending}>
-							{isPending ? '생성 중...' : '이슈 자동 생성'}
-							<Icon name="IcnEnter" />
-						</GenerateButton>
-						{error && <ErrorText>생성 중 오류가 발생했습니다.</ErrorText>}
-					</InputContainer>
-
-					<RightSection>
-						<ModalTitle>생성된 이슈</ModalTitle>
+					<LeftPanel>
+						<SubTitle>1. 요구사항 입력</SubTitle>
+						<Textarea
+							placeholder="예시) 로그인 페이지를 만들어줘. 아이디와 비밀번호 입력 필드, 그리고 로그인 버튼이 필요해."
+							value={input}
+							onChange={(e) => setInput(e.target.value)}
+						/>
+						<Button
+							type="primary"
+							onClick={handleGenerateIssues}
+							disabled={isPending}
+							label={isPending ? '생성 중...' : '자동 생성'}
+						/>
+						{error && <ErrorText>오류: 태스크 생성에 실패했습니다. 다시 시도해주세요.</ErrorText>}
+					</LeftPanel>
+					<RightPanel>
+						<SubTitle>2. 생성된 태스크 확인</SubTitle>
 						<IssueList>
-							{tasks.map((task) => (
-								<Task key={task.id} task={task} />
-							))}
+							{tasks.length > 0 ? (
+								tasks.map((task) => <Task key={task.id} task={task} />)
+							) : (
+								<Placeholder>
+									{isPending ? 'AI가 태스크를 생성하고 있습니다...' : '이곳에 생성된 태스크가 표시됩니다.'}
+								</Placeholder>
+							)}
 						</IssueList>
-						<Button type="outlined-primary" label="확인(닫기)" onClick={onClose} additionalCss={ButtonCSS} />
-					</RightSection>
+					</RightPanel>
 				</ModalBody>
-			</ModalContent>
-		</ModalOverlay>
+				<ModalFooter>
+					<Button type="secondary" label="닫기" onClick={onClose} />
+				</ModalFooter>
+			</ModalContainer>
+		</BackDrop>
 	);
 };
 
 export default AIChatModal;
 
-/* …styled components 생략… */
-
-const ErrorText = styled.div`
-	margin-top: 0.5rem;
-	color: red;
-	font-size: 1.4rem;
-`;
-
-const ModalOverlay = styled.div`
+const BackDrop = styled.div`
 	position: fixed;
 	top: 0;
 	left: 0;
-	width: 100%;
-	height: 100%;
-	background: rgba(0, 0, 0, 0.5);
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.4);
 	display: flex;
-	justify-content: center;
 	align-items: center;
+	justify-content: center;
 	z-index: 1000;
 `;
 
-const ModalContent = styled.div`
-	width: 80%;
-	height: 80%;
-	background: white;
-	border-radius: 12px;
-	padding: 3rem;
-	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+const ModalContainer = styled.div`
+	width: 80vw;
+	max-width: 1200px;
+	height: 80vh;
+	background-color: ${({ theme }) => theme.ui.panel};
+	border-radius: 8px;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 	display: flex;
 	flex-direction: column;
-	gap: 2rem;
-
 	overflow: hidden;
 `;
 
-const ModalHeader = styled.div`
+const ModalHeader = styled.header`
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	border-bottom: 1px solid #e0e0e0;
-	padding-bottom: 1rem;
+	padding: 1.6rem 2rem;
+	border-bottom: 1px solid ${({ theme }) => theme.ui.border};
+	flex-shrink: 0;
 `;
 
-const ModalTitle = styled.h2`
-	font-size: 2.4rem;
-	font-weight: 700;
-	color: #333;
-`;
-
-const CloseButton = styled.button`
-	background: none;
-	border: none;
-	font-size: 2rem;
-	cursor: pointer;
-`;
-
-const ModalBody = styled.div`
-	display: flex;
-	flex-direction: column;
-	gap: 5rem;
-`;
-
-const InputContainer = styled.div`
-	display: flex;
-	flex-direction: column;
-	gap: 2rem;
-
-	height: 40rem;
-	max-height: 60rem;
-`;
-
-const TextArea = styled.textarea`
-	padding: 2rem;
-	box-sizing: border-box;
+const Title = styled.h2`
 	font-size: 1.8rem;
-	border: 1px solid #ccc;
-	border-radius: 8px;
-	resize: none; /* 사용자가 크기를 조정하지 못하도록 설정 */
-	width: 100%;
-	height: 100%; /* 높이를 늘려 더 많은 텍스트를 입력할 수 있도록 설정 */
-	line-height: 1.8rem;
+	font-weight: 600;
+	color: ${({ theme }) => theme.text.primary};
 `;
 
-const GenerateButton = styled.button`
+const ModalBody = styled.main`
 	display: flex;
-	justify-content: center;
-	align-items: center;
-	flex-direction: row;
-
-	width: fit-content;
-	height: fit-content;
-	padding: 1rem 2rem;
-	font-size: 2rem;
-	color: white;
-	background-color: #007bff;
-	border: none;
-	border-radius: 8px;
-	cursor: pointer;
-	transition: background-color 0.2s ease;
-
-	gap: 1rem;
-
-	&:hover {
-		background-color: #0056b3;
-	}
-`;
-
-const IssueList = styled.div`
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-
-	gap: 5rem; /* 카드 간 간격 */
-	overflow: hidden; /* 스크롤 비활성화 */
-	overflow-y: scroll; /* 스크롤 활성화 */
-`;
-
-const RightSection = styled.div`
-	position: relative;
-	display: flex;
-	flex-direction: column;
-	gap: 2rem;
-	box-sizing: border-box;
-	width: 100%;
+	flex-grow: 1;
 	height: 100%;
 `;
 
-const ButtonCSS = css`
-	position: absolute;
-	bottom: 60px;
-	right: 10px;
+const Panel = styled.div`
+	padding: 2rem;
+	display: flex;
+	flex-direction: column;
+	gap: 1.6rem;
+`;
+
+const LeftPanel = styled(Panel)`
+	width: 50%;
+	border-right: 1px solid ${({ theme }) => theme.ui.border};
+`;
+
+const RightPanel = styled(Panel)`
+	width: 50%;
+`;
+
+const SubTitle = styled.h3`
+	font-size: 1.6rem;
+	font-weight: 600;
+	color: ${({ theme }) => theme.text.primary};
+	margin-bottom: 0.8rem;
+`;
+
+const Textarea = styled.textarea`
+	width: 100%;
+	height: 100%;
+	padding: 1.2rem;
+	font-size: 1.4rem;
+	background-color: ${({ theme }) => theme.ui.background};
+	border: 1px solid ${({ theme }) => theme.ui.border};
+	border-radius: 6px;
+	color: ${({ theme }) => theme.text.primary};
+	resize: none;
+	box-sizing: border-box;
+	font-family: inherit;
+
+	&:focus {
+		outline: none;
+		border-color: ${({ theme }) => theme.interactive.primary};
+	}
+`;
+
+const ErrorText = styled.p`
+	font-size: 1.4rem;
+	color: ${({ theme }) => theme.interactive.danger};
+`;
+
+const IssueList = styled.div`
+	flex-grow: 1;
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 1.2rem;
+	padding-right: 1rem;
+`;
+
+const Placeholder = styled.div`
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+	color: ${({ theme }) => theme.text.secondary};
+	font-size: 1.6rem;
+`;
+
+const ModalFooter = styled.footer`
+	display: flex;
+	justify-content: flex-end;
+	gap: 1rem;
+	padding: 1.6rem 2rem;
+	border-top: 1px solid ${({ theme }) => theme.ui.border};
+	flex-shrink: 0;
 `;

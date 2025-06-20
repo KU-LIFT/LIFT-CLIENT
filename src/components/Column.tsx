@@ -10,66 +10,75 @@ type ColumnProps = {
 	tasks: Array<TaskType>;
 	onOpenAddModal: (columnName: string, columnId: number) => void;
 	onTaskClick: (task: TaskType) => void;
-	hoverDisabled: boolean;
 };
 
-function Column({ board, tasks, onOpenAddModal, onTaskClick, hoverDisabled }: ColumnProps) {
+function Column({ board, tasks, onOpenAddModal, onTaskClick }: ColumnProps) {
 	const { setNodeRef } = useDroppable({ id: board.id.toString() });
 
 	return (
-		<BoardItem ref={setNodeRef} id={board.id.toString()}>
-			<BoardHeader>
-				<BoardTitle>{board.name}</BoardTitle>
-				<Button type="outlined-assistive" label="Task 추가" onClick={() => onOpenAddModal(board.name, board.id)} />
-			</BoardHeader>
+		<ColumnContainer ref={setNodeRef} id={board.id.toString()}>
+			<ColumnHeader>
+				<ColumnTitle>{board.name}</ColumnTitle>
+				<Button
+					type="secondary"
+					size="small"
+					label="+ Task 추가"
+					onClick={() => onOpenAddModal(board.name, board.id)}
+				/>
+			</ColumnHeader>
 
-			<CardListContainer>
+			<CardList>
 				{tasks.map((task) => (
-					<TaskDraggable key={task.id} task={task} onTaskClick={onTaskClick} hoverDisabled={hoverDisabled} />
+					<TaskDraggable key={task.id} task={task} onTaskClick={onTaskClick} />
 				))}
-			</CardListContainer>
-		</BoardItem>
+			</CardList>
+		</ColumnContainer>
 	);
 }
 
 export default Column;
 
-const BoardItem = styled.div`
-	min-width: 40rem;
-	height: 80rem;
+const ColumnContainer = styled.div`
+	width: 320px;
+	flex-shrink: 0;
+	height: 100%;
 	display: flex;
 	flex-direction: column;
-	justify-content: space-between;
-	align-items: flex-start;
-
-	border: 2px solid ${({ theme }) => theme.colors.border};
-	border-radius: 20px;
-	background-color: ${({ theme }) => theme.colors.boardBackground};
-	overflow: visible;
+	background-color: ${({ theme }) => theme.ui.panel};
+	border-radius: 8px;
+	box-shadow: 0 2px 4px ${({ theme }) => theme.ui.shadow};
 `;
 
-const BoardHeader = styled.div`
+const ColumnHeader = styled.div`
 	display: flex;
-	width: 100%;
 	justify-content: space-between;
-	padding: 2rem;
-	box-sizing: border-box;
+	align-items: center;
+	padding: 1.2rem 1.6rem;
+	border-bottom: 1px solid ${({ theme }) => theme.ui.border};
 `;
 
-const BoardTitle = styled.p`
-	font-size: 2rem;
-	font-weight: 500;
-	color: ${({ theme }) => theme.colors.title};
+const ColumnTitle = styled.h2`
+	font-size: 1.6rem;
+	font-weight: 600;
+	color: ${({ theme }) => theme.text.primary};
 `;
 
-const CardListContainer = styled.div`
+const CardList = styled.div`
 	flex-grow: 1;
-	padding: 2rem;
+	padding: 1.6rem;
 	display: flex;
 	flex-direction: column;
-	gap: 1rem;
+	gap: 1.2rem;
 	overflow-y: auto;
+
 	&::-webkit-scrollbar {
-		display: none;
+		width: 8px;
+	}
+	&::-webkit-scrollbar-thumb {
+		background-color: ${({ theme }) => theme.ui.border};
+		border-radius: 4px;
+	}
+	&::-webkit-scrollbar-track {
+		background-color: transparent;
 	}
 `;

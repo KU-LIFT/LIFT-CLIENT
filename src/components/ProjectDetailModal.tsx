@@ -28,43 +28,50 @@ const ProjectDetailModal = ({ onClose, onCreate, defaultValue, isEdit }: Props) 
 			setProjectKey(defaultValue.projectKey);
 			setName(defaultValue.name);
 			setDescription(defaultValue.description);
-		} else {
-			setProjectKey('');
-			setName('');
-			setDescription('');
 		}
 	}, [defaultValue]);
 
 	const handleSubmit = () => {
-		if (!projectKey || !name) return;
-		// 실제 api 호출 부분에서 onCreate 호출하도록 변경 가능
+		if (!projectKey || !name) {
+			alert('프로젝트 키와 이름은 필수 항목입니다.');
+			return;
+		}
 		onCreate({ projectKey, name, description });
-		onClose();
 	};
 
 	return (
-		<BackDrop>
-			<ModalLayout>
-				<MemberModalHeader>
-					<Title>{isEdit ? '프로젝트 수정' : '프로젝트 생성'}</Title>
+		<BackDrop
+			onClick={(e) => {
+				if (e.target === e.currentTarget) {
+					onClose();
+				}
+			}}
+		>
+			<ModalContainer>
+				<ModalHeader>
+					<Title>{isEdit ? '프로젝트 수정' : '새 프로젝트 생성'}</Title>
 					<IconButton type="normal" iconName="IcnX" onClick={onClose} />
-				</MemberModalHeader>
-
-				<FirstContainer>
+				</ModalHeader>
+				<ModalContent>
 					<Input
-						placeholder="projectKey"
+						placeholder="프로젝트 키 (예: LIFT-123)"
 						value={projectKey}
 						onChange={(e) => setProjectKey(e.target.value)}
-						disabled={isEdit} // 수정 모드에서는 projectKey 변경 불가
+						disabled={isEdit}
 					/>
-					<Input placeholder="이름" value={name} onChange={(e) => setName(e.target.value)} />
-					<textarea placeholder="설명" value={description} onChange={(e) => setDescription(e.target.value)} />
-				</FirstContainer>
-
-				<Wrapper>
-					<Button type="outlined-primary" label={isEdit ? '수정' : '생성'} onClick={handleSubmit} />
-				</Wrapper>
-			</ModalLayout>
+					<Input placeholder="프로젝트 이름" value={name} onChange={(e) => setName(e.target.value)} />
+					<Textarea
+						placeholder="프로젝트에 대한 간단한 설명을 입력하세요."
+						value={description}
+						onChange={(e) => setDescription(e.target.value)}
+						rows={5}
+					/>
+				</ModalContent>
+				<ModalFooter>
+					<Button type="secondary" label="취소" onClick={onClose} />
+					<Button type="primary" label={isEdit ? '수정' : '생성'} onClick={handleSubmit} />
+				</ModalFooter>
+			</ModalContainer>
 		</BackDrop>
 	);
 };
@@ -75,66 +82,85 @@ const BackDrop = styled.div`
 	left: 0;
 	right: 0;
 	bottom: 0;
-	background: rgba(0, 0, 0, 0.2);
+	background: rgba(0, 0, 0, 0.4);
 	display: flex;
-	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-
 	z-index: 1000;
 `;
 
-const ModalLayout = styled.div`
-	background-color: ${({ theme }) => theme.color.Grey.White};
-
-	width: 600px;
-
-	padding: 20px;
-
+const ModalContainer = styled.div`
+	width: 500px;
+	background-color: ${({ theme }) => theme.ui.panel};
 	border-radius: 8px;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+	display: flex;
+	flex-direction: column;
 `;
 
-const MemberModalHeader = styled.div`
+const ModalHeader = styled.div`
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 16px 0;
-	background: #fff;
-	border-bottom: 1px solid #eaeaea;
+	padding: 1.6rem 2rem;
+	border-bottom: 1px solid ${({ theme }) => theme.ui.border};
+`;
 
-	h1 {
-		margin: 0;
-		font-size: 1.5rem;
-		color: #333;
+const Title = styled.h2`
+	font-size: 1.8rem;
+	font-weight: 600;
+	color: ${({ theme }) => theme.text.primary};
+`;
+
+const ModalContent = styled.div`
+	padding: 2rem;
+	display: flex;
+	flex-direction: column;
+	gap: 1.6rem;
+`;
+
+const inputBaseStyles = (theme: any) => `
+	width: 100%;
+	padding: 1rem 1.2rem;
+	font-size: 1.4rem;
+	background-color: ${theme.ui.background};
+	border: 1px solid ${theme.ui.border};
+	border-radius: 6px;
+	color: ${theme.text.primary};
+	transition: border-color 0.2s;
+	box-sizing: border-box;
+
+	&:focus {
+		outline: none;
+		border-color: ${theme.interactive.primary};
+	}
+
+	&::placeholder {
+		color: ${theme.text.disabled};
+	}
+
+	&:disabled {
+		background-color: ${theme.ui.border};
+		cursor: not-allowed;
 	}
 `;
 
-const FirstContainer = styled.div`
-	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
-
-	padding: 20px 10px;
-
-	gap: 15px;
+const Input = styled.input`
+	${({ theme }) => inputBaseStyles(theme)}
 `;
 
-const Title = styled.p`
-	font-size: 2.4rem;
-	font-weight: 600;
+const Textarea = styled.textarea`
+	${({ theme }) => inputBaseStyles(theme)}
+	resize: vertical;
+	font-family: inherit;
 `;
 
-const Wrapper = styled.div`
+const ModalFooter = styled.div`
 	display: flex;
 	justify-content: flex-end;
-	align-items: flex-end;
-`;
-
-const Input = styled.input`
-	padding: 5px 10px;
-	width: 90%;
-
-	font-size: 1.4rem;
+	gap: 1rem;
+	padding: 1.6rem 2rem;
+	border-top: 1px solid ${({ theme }) => theme.ui.border};
 `;
 
 export default ProjectDetailModal;

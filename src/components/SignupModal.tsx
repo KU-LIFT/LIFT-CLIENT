@@ -19,9 +19,7 @@ function SignupModal({ onClose }: Props) {
 		try {
 			const message = await userSignup({ name, email, password: pw });
 			alert(message || '회원가입 성공!');
-			setTimeout(() => {
-				onClose();
-			}, 1000);
+			onClose();
 		} catch (err: any) {
 			alert(err?.response?.data?.message || err.message || '회원가입 실패');
 		} finally {
@@ -30,53 +28,62 @@ function SignupModal({ onClose }: Props) {
 	};
 
 	return (
-		<Overlay onClick={onClose}>
-			<ModalContainer onClick={(e) => e.stopPropagation()}>
-				<CloseButtonWrapper onClick={onClose}>
-					<IconButton type="normal" iconName="IcnX" size="big" />
-				</CloseButtonWrapper>
-				<AuthTitle>Create Account</AuthTitle>
-				<AuthInputContainer>
-					<AuthInput type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="name" />
-					<AuthInput type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email" />
-					<AuthInput type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="password" />
-					<AuthButton onClick={handleSignup} disabled={loading}>
-						{loading ? '가입 중...' : '회원가입'}
-					</AuthButton>
-				</AuthInputContainer>
+		<BackDrop onClick={(e) => (e.target === e.currentTarget ? onClose() : null)}>
+			<ModalContainer>
+				<ModalHeader>
+					<div />
+					<IconButton type="normal" iconName="IcnX" onClick={onClose} />
+				</ModalHeader>
+				<ModalContent>
+					<AuthTitle>계정 생성</AuthTitle>
+					<AuthInputContainer>
+						<AuthInput type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="이름" />
+						<AuthInput type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="이메일" />
+						<AuthInput type="password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="비밀번호" />
+						<AuthButton onClick={handleSignup} disabled={loading}>
+							{loading ? '가입 중...' : '회원가입'}
+						</AuthButton>
+					</AuthInputContainer>
+				</ModalContent>
 			</ModalContainer>
-		</Overlay>
+		</BackDrop>
 	);
 }
 
 export default SignupModal;
 
-const Overlay = styled.div`
+const BackDrop = styled.div`
 	position: fixed;
 	top: 0;
 	left: 0;
-	width: 100vw;
-	height: 100vh;
+	right: 0;
+	bottom: 0;
 	background: rgba(0, 0, 0, 0.4);
 	display: flex;
-	justify-content: center;
 	align-items: center;
+	justify-content: center;
 	z-index: 1000;
 `;
 
 const ModalContainer = styled.div`
-	position: relative;
-	padding: 4rem;
-	background: white;
-	border-radius: 1.5rem;
+	width: 420px;
+	background-color: ${({ theme }) => theme.ui.panel};
+	border-radius: 8px;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 	display: flex;
 	flex-direction: column;
-	gap: 5rem;
 `;
 
-const CloseButtonWrapper = styled.div`
-	position: absolute;
-	top: 1rem;
-	right: 1rem;
-	cursor: pointer;
+const ModalHeader = styled.div`
+	display: flex;
+	justify-content: flex-end;
+	padding: 1rem;
+`;
+
+const ModalContent = styled.div`
+	padding: 2rem 4rem 4rem;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2.4rem;
 `;

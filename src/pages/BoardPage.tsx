@@ -80,7 +80,6 @@ function BoardPage() {
 		setActiveTask(dragging);
 	};
 
-	const [hoverDisabled, setHoverDisabled] = useState(false);
 	// 드래그 종료 시
 	const handleDragEnd = (event: DragEndEvent) => {
 		const { active, over } = event;
@@ -95,10 +94,8 @@ function BoardPage() {
 		setLocalTasks((tasks) => tasks.map((t) => (t.id === taskId ? { ...t, columnId: newColumnId } : t)));
 		// 2) 서버에 백그라운드로 요청
 		moveTaskMutation.mutate({ taskId, columnId: newColumnId });
-		// 3) overlay 제거는 다음 프레임으로 딜레이
-		setHoverDisabled(true);
-		setTimeout(() => setHoverDisabled(false), 500);
-		requestAnimationFrame(() => setActiveTask(null));
+		// 3) overlay 제거
+		setActiveTask(null);
 	};
 
 	if (isLoading) return <div>로딩 중...</div>;
@@ -116,11 +113,7 @@ function BoardPage() {
 			<BoardPageLayout>
 				<BoardPageHeader>
 					<BoardPageTitle>{boardsData[0].name}</BoardPageTitle>
-					<Button
-						type="outlined-assistive"
-						label="Task 추가 With AI"
-						onClick={() => handleOpenAIModal(boardsData[0].id)}
-					/>
+					<Button type="primary" label="Task 추가 With AI" onClick={() => handleOpenAIModal(boardsData[0].id)} />
 				</BoardPageHeader>
 
 				<BoardsContainer>
@@ -134,7 +127,6 @@ function BoardPage() {
 								board={board}
 								tasks={tasksForColumn}
 								onOpenAddModal={(name, id) => setAddModal({ open: true, columnName: name, columnId: id })}
-								hoverDisabled={hoverDisabled}
 								onTaskClick={handleTaskClick}
 							/>
 						);
@@ -167,36 +159,37 @@ function BoardPage() {
 export default BoardPage;
 
 const BoardPageLayout = styled.div`
-	width: 100%;
+	height: 100%;
 	display: flex;
 	flex-direction: column;
-	align-items: flex-start;
-	padding: 4rem 6rem;
+	padding: 2.4rem 4rem;
 	box-sizing: border-box;
-	gap: 4rem;
+	gap: 2.4rem;
 `;
 
 const BoardPageHeader = styled.div`
-	width: 100%;
+	flex-shrink: 0;
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 `;
 
-const BoardPageTitle = styled.p`
-	font-size: 4rem;
-	font-weight: 500;
-	color: ${({ theme }) => theme.colors.title};
+const BoardPageTitle = styled.h1`
+	font-size: 2.4rem;
+	font-weight: 700;
+	color: ${({ theme }) => theme.text.primary};
 `;
 
 const BoardsContainer = styled.div`
+	flex-grow: 1;
 	display: flex;
 	gap: 2rem;
+	overflow-x: auto;
+	padding-bottom: 1rem;
 `;
 
 const OverlayWrapper = styled.div`
-	width: 100%;
-	transform: scale(1.03);
-	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-	border-radius: 20px;
+	transform: rotate(3deg);
+	box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+	border-radius: 8px;
 `;

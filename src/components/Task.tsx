@@ -19,63 +19,77 @@ function Task({ task, onTaskClick }: TaskProps) {
 			deleteTaskMutation.mutate(task.id);
 		}
 	};
+
 	return (
-		<TaskLayout
+		<TaskCard
 			onClick={(e: React.MouseEvent<HTMLDivElement>) => {
 				e.stopPropagation();
 				onTaskClick?.(task);
 			}}
 		>
-			<Container>
+			<div>
 				<TaskTitle>{task.name}</TaskTitle>
 				<TaskDescription>{task.description}</TaskDescription>
-			</Container>
-			<div onClick={handleDeleteClick}>
-				<IconButton type="outlined" iconName="IcnDelete" />
 			</div>
-		</TaskLayout>
+			<DeleteButtonWrapper className="delete-button-wrapper">
+				<IconButton type="normal" size="small" iconName="IcnDelete" onClick={handleDeleteClick} />
+			</DeleteButtonWrapper>
+		</TaskCard>
 	);
 }
 
 export default Task;
 
-const TaskLayout = styled.div`
-	width: 34rem;
-	height: 14rem;
-	display: flex;
-	flex-direction: row;
-	justify-content: space-between;
-	align-items: flex-start;
-
-	border: 2px solid ${({ theme }) => theme.colors.border};
-	border-radius: 20px;
-	background-color: ${({ theme }) => theme.colors.cardBackground};
-	box-shadow: 0 4px 8px ${({ theme }) => theme.colors.shadow};
-
-	box-sizing: border-box;
-	padding: 2rem;
-
-	gap: 1.5rem;
+const DeleteButtonWrapper = styled.div`
+	opacity: 0;
+	transition: opacity 0.2s ease-in-out;
 `;
 
-const TaskTitle = styled.p`
-	font-size: 2rem;
+const TaskCard = styled.div`
+	width: 100%;
+	padding: 1.2rem 1.6rem;
+	background-color: ${({ theme }) => theme.ui.panel};
+	border: 1px solid ${({ theme }) => theme.ui.border};
+	border-radius: 6px;
+	box-shadow: 0 1px 2px ${({ theme }) => theme.ui.shadow};
+	cursor: pointer;
+	transition:
+		background-color 0.2s ease-in-out,
+		box-shadow 0.2s ease-in-out;
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 1rem;
+
+	&:hover {
+		background-color: ${({ theme }) => theme.color.Grey[200]};
+		box-shadow: 0 2px 4px ${({ theme }) => theme.ui.shadow};
+	}
+
+	&:hover .delete-button-wrapper {
+		opacity: 1;
+	}
+`;
+
+const TaskTitle = styled.h3`
+	font-size: 1.6rem;
 	font-weight: 500;
-	color: ${({ theme }) => theme.colors.title};
+	color: ${({ theme }) => theme.text.primary};
+	margin-bottom: 0.4rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	line-height: 1.5;
 `;
 
 const TaskDescription = styled.p`
-	font-size: 1.6rem;
-	font-weight: 400;
-	line-height: 2.4rem;
-	color: ${({ theme }) => theme.colors.secondaryText};
+	font-size: 1.4rem;
+	color: ${({ theme }) => theme.text.secondary};
+	white-space: pre-wrap;
+	word-break: break-all;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	white-space: nowrap;
-`;
-
-const Container = styled.div`
-	display: flex;
-	flex-direction: column;
-	gap: 2rem;
+	line-height: 1.5;
 `;

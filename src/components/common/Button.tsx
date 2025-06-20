@@ -5,7 +5,7 @@ import Icon from './Icon';
 
 // 이후 타입 여러군데에서 필요하면 빼서 export
 type SizeType = 'small' | 'medium' | 'large';
-type ButtonType = 'solid' | 'outlined-primary' | 'outlined-assistive' | 'text-primary' | 'text-assistive';
+type ButtonType = 'primary' | 'secondary' | 'text';
 
 type ButtonProps = {
 	type: ButtonType;
@@ -30,7 +30,7 @@ function Button({
 	onClick,
 	onMouseDown,
 }: ButtonProps) {
-	const { font, color } = useTheme();
+	const { font, color, interactive, text } = useTheme();
 	// 크기별 사이즈
 	const buttonSizes: Record<SizeType, SerializedStyles> = {
 		small: css`
@@ -47,73 +47,54 @@ function Button({
 		`,
 	};
 
-	// 버튼 type 별 스타일
-	const getButtonStateStyles = (
-		baseColor: string,
-		bgColor: string,
-		hoverColor: string,
-		activeColor: string,
-		border: boolean = true,
-		borderColor?: string
-	) => {
-		if (disabled) {
-			return css`
-				color: ${color.Grey.Grey4};
-
-				background-color: transparent;
-				${border &&
-				css`
-					border: solid 1px ${color.Grey.Grey4};
-				`}
-			`;
-		}
-		return css`
-			color: ${baseColor};
-
-			background-color: ${bgColor};
-			${border &&
-			css`
-				border: solid 1px ${borderColor || baseColor};
-			`}
-
-			:hover {
-				background-color: ${hoverColor};
-			}
-
-			:active {
-				background-color: ${activeColor};
-			}
-		`;
-	};
-
 	const buttonTypeStyle: Record<ButtonType, SerializedStyles> = {
-		solid: css`
-			color: ${disabled ? color.Grey.Grey4 : color.Grey.White};
+		primary: css`
+			background-color: ${interactive.primary};
+			color: ${text.inverse};
+			border: none;
 
-			background-color: ${disabled ? color.Grey.Grey3 : color.Blue.Blue6};
-
-			${!disabled &&
-			css`
-				:hover {
-					background-color: ${color.Blue.Blue7};
-				}
-
-				:active {
-					background-color: ${color.Blue.Blue8};
-				}
-			`}
+			&:hover {
+				background-color: ${interactive.primaryHover};
+			}
+			&:active {
+				background-color: ${interactive.primaryActive};
+			}
+			&:disabled {
+				background-color: ${interactive.secondary};
+				color: ${text.disabled};
+			}
 		`,
-		'outlined-primary': getButtonStateStyles(color.Blue.Blue7, color.Grey.White, color.Blue.Blue2, color.Blue.Blue3),
-		'outlined-assistive': getButtonStateStyles(
-			color.Grey.Grey6,
-			color.Grey.White,
-			color.Grey.Grey2,
-			color.Grey.Grey3,
-			true,
-			color.Grey.Grey3
-		),
-		'text-primary': getButtonStateStyles(color.Blue.Blue7, 'transparent', color.Blue.Blue2, color.Blue.Blue3, false),
-		'text-assistive': getButtonStateStyles(color.Grey.Grey6, 'transparent', color.Grey.Grey2, color.Grey.Grey3, false),
+		secondary: css`
+			background-color: ${color.Grey.White};
+			color: ${text.primary};
+			border: 1px solid ${interactive.secondary};
+
+			&:hover {
+				background-color: ${color.Grey[200]};
+			}
+			&:active {
+				background-color: ${color.Grey[300]};
+			}
+			&:disabled {
+				border-color: ${interactive.secondary};
+				color: ${text.disabled};
+			}
+		`,
+		text: css`
+			background-color: transparent;
+			color: ${text.primary};
+			border: none;
+
+			&:hover {
+				background-color: ${interactive.secondary};
+			}
+			&:active {
+				background-color: ${color.Grey[300]};
+			}
+			&:disabled {
+				color: ${text.disabled};
+			}
+		`,
 	};
 
 	const ButtonLayout = styled.button`
@@ -126,9 +107,11 @@ function Button({
 		padding-left: 1.6rem;
 
 		${buttonTypeStyle[type]}
-		border-radius: 8px;
+		border-radius: 4px;
 
 		${additionalCss}
+		cursor: ${disabled ? 'not-allowed' : 'pointer'};
+		transition: background-color 0.2s ease-in-out;
 	`;
 
 	/** Button 사이즈에 따라 아이콘 사이즈 결정 */
@@ -139,7 +122,7 @@ function Button({
 	};
 
 	return (
-		<ButtonLayout onClick={disabled ? () => {} : onClick} onMouseDown={onMouseDown}>
+		<ButtonLayout disabled={disabled} onClick={onClick} onMouseDown={onMouseDown}>
 			{leftIcon && <Icon name={leftIcon} size={iconSize[size]} />}
 			{label}
 			{rightIcon && <Icon name={rightIcon} size={iconSize[size]} />}

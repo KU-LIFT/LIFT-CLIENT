@@ -7,19 +7,39 @@ import { UpdateTaskRequest } from '@/apis/task/Task';
 import useUserStore from '@/stores/useUserStore';
 import Button from './common/Button';
 import IconButton from './common/IconButton';
+import { useBranches, useCreateBranch, useCommits } from '@/apis/git/query';
+import { css } from '@emotion/react';
 
-const EditTaskModal = ({ open, task, onClose }: { open: boolean; task: TaskType; onClose: () => void }) => {
+const EditTaskModal = ({
+	open,
+	task,
+	onClose,
+	onBranchLinked,
+}: {
+	open: boolean;
+	task: TaskType;
+	onClose: () => void;
+	onBranchLinked?: () => void;
+}) => {
 	const projectKey = useProjectKeyStore((store) => store.projectKey);
 	const [name, setName] = useState('');
 	const [description, setDescription] = useState('');
 	const updateTaskMutation = useUpdateTask(projectKey, task.id);
-
 	const currentUserId = useUserStore((state) => state.userId);
+
+	// --- Github 연동 관련 ---
+	const { data: branches } = useBranches(projectKey, task.id);
+	const createBranch = useCreateBranch(projectKey, task.id);
+	const [newBranch, setNewBranch] = useState('');
+	const [baseBranch, setBaseBranch] = useState('');
+	const [selectedBranch, setSelectedBranch] = useState(task.githubBranch || '');
+	const { data: commits } = useCommits(projectKey, task.id);
 
 	useEffect(() => {
 		if (task) {
 			setName(task.name);
 			setDescription(task.description ?? '');
+			setSelectedBranch(task.githubBranch || '');
 		}
 	}, [task]);
 
@@ -43,6 +63,22 @@ const EditTaskModal = ({ open, task, onClose }: { open: boolean; task: TaskType;
 		});
 	};
 
+	const handleBranchLink = (branchName: string, baseBranchName?: string) => {
+		createBranch.mutate(
+			{ newBranch: branchName, baseBranch: baseBranchName },
+			{
+				onSuccess: () => {
+					setSelectedBranch(branchName);
+					alert('브랜치가 연동되었습니다!');
+					onBranchLinked && onBranchLinked();
+				},
+				onError: (err: any) => {
+					alert(err?.response?.data?.message || '브랜치 연동 실패');
+				},
+			}
+		);
+	};
+
 	if (!open) return null;
 	return (
 		<BackDrop
@@ -58,13 +94,84 @@ const EditTaskModal = ({ open, task, onClose }: { open: boolean; task: TaskType;
 					<IconButton type="normal" iconName="IcnX" onClick={onClose} />
 				</ModalHeader>
 				<ModalContent>
-					<Input value={name} onChange={(e) => setName(e.target.value)} placeholder="태스크 이름" />
+					<Input value={name} onChange={(e) => setName(e.target.value)} placeholder="task 이름" />
 					<Textarea
 						value={description}
 						onChange={(e) => setDescription(e.target.value)}
 						placeholder="태스크에 대한 간단한 설명을 입력하세요."
 						rows={5}
 					/>
+
+					{/* --- 깃 브랜치 연동 UI --- */}
+					<GithubSection>
+						<GithubSectionTitle>깃 브랜치 연동</GithubSectionTitle>
+						<BranchRow>
+							<BranchSelect value={selectedBranch} onChange={(e) => setSelectedBranch(e.target.value)}>
+								<option value="">브랜치 선택</option>
+								{branches?.map((b) => (
+									<option key={b.name} value={b.name}>
+										{b.name}
+									</option>
+								))}
+							</BranchSelect>
+							<Button
+								type="primary"
+								label="연동"
+								onClick={() => handleBranchLink(selectedBranch)}
+								additionalCss={css`
+									min-width: 80px;
+								`}
+							/>
+						</BranchRow>
+						<BranchRow>
+							<InputSmall value={newBranch} onChange={(e) => setNewBranch(e.target.value)} placeholder="새 브랜치명" />
+							<InputSmall
+								value={baseBranch}
+								onChange={(e) => setBaseBranch(e.target.value)}
+								placeholder="기준 브랜치(선택)"
+							/>
+							<Button
+								type="primary"
+								label="생성+연동"
+								onClick={() => handleBranchLink(newBranch, baseBranch)}
+								additionalCss={css`
+									min-width: 120px;
+								`}
+							/>
+						</BranchRow>
+						{selectedBranch && (
+							<CurrentBranch>
+								현재 연동 브랜치: <b>{selectedBranch}</b>
+							</CurrentBranch>
+						)}
+					</GithubSection>
+
+					{/* --- 커밋 리스트 --- */}
+					{selectedBranch && (
+						<CommitSection>
+							<CommitSectionTitle>커밋 내역</CommitSectionTitle>
+							<CommitList>
+								{commits?.map((c) => (
+									<CommitItem key={c.sha}>
+										<div>
+											<b>{c.commit.message}</b>
+										</div>
+										<div>
+											by {c.commit.author.name} ({c.commit.author.date.slice(0, 10)})
+										</div>
+										<div className="commit-meta">
+											SHA: {c.sha.slice(0, 7)}
+											{c.html_url && (
+												<a className="commit-link" href={c.html_url} target="_blank" rel="noreferrer">
+													자세히
+												</a>
+											)}
+										</div>
+									</CommitItem>
+								))}
+							</CommitList>
+						</CommitSection>
+					)}
 				</ModalContent>
 				<ModalFooter>
 					<Button type="secondary" label="취소" onClick={onClose} />
@@ -92,11 +199,13 @@ const BackDrop = styled.div`
 
 const ModalContainer = styled.div`
 	width: 500px;
+	max-height: 80vh;
 	background-color: ${({ theme }) => theme.ui.panel};
 	border-radius: 8px;
 	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 	display: flex;
 	flex-direction: column;
+	overflow-y: auto;
 `;
 
 const ModalHeader = styled.div`
@@ -148,12 +257,14 @@ const inputBaseStyles = (theme: any) => `
 
 const Input = styled.input`
 	${({ theme }) => inputBaseStyles(theme)}
+	font-size: 1.7rem;
 `;
 
 const Textarea = styled.textarea`
 	${({ theme }) => inputBaseStyles(theme)}
 	resize: vertical;
 	font-family: inherit;
+	font-size: 1.5rem;
 `;
 
 const ModalFooter = styled.div`
@@ -162,4 +273,116 @@ const ModalFooter = styled.div`
 	gap: 1rem;
 	padding: 1.6rem 2rem;
 	border-top: 1px solid ${({ theme }) => theme.ui.border};
+`;
+
+const GithubSection = styled.div`
+	margin-top: 2rem;
+	padding: 1.2rem;
+	background: ${({ theme }) => theme.ui.background};
+	border-radius: 8px;
+	border: 1px solid ${({ theme }) => theme.ui.border};
+	display: flex;
+	flex-direction: column;
+	gap: 1.2rem;
+`;
+const GithubSectionTitle = styled.h3`
+	font-size: 1.3rem;
+	font-weight: 600;
+	color: ${({ theme }) => theme.text.primary};
+	margin-bottom: 0.5rem;
+`;
+const BranchRow = styled.div`
+	display: flex;
+	gap: 1rem;
+	align-items: center;
+`;
+const BranchSelect = styled.select`
+	min-width: 160px;
+	padding: 0.9rem 1.4rem;
+	border-radius: 6px;
+	border: 1.5px solid ${({ theme }) => theme.ui.border};
+	background: ${({ theme }) => theme.ui.background};
+	color: ${({ theme }) => theme.text.primary};
+	font-size: 1.5rem;
+	font-weight: 500;
+	transition: border 0.2s;
+	&:hover,
+	&:focus {
+		border-color: ${({ theme }) => theme.interactive.primary};
+		outline: none;
+	}
+`;
+const InputSmall = styled.input`
+	width: 150px;
+	padding: 0.8rem 1.2rem;
+	font-size: 1.4rem;
+	border-radius: 6px;
+	border: 1px solid ${({ theme }) => theme.ui.border};
+	background: ${({ theme }) => theme.ui.panel};
+	color: ${({ theme }) => theme.text.primary};
+`;
+const CurrentBranch = styled.div`
+	margin-top: 0.5rem;
+	font-size: 1.2rem;
+	color: ${({ theme }) => theme.text.secondary};
+`;
+const CommitSection = styled.div`
+	margin-top: 2.4rem;
+`;
+const CommitSectionTitle = styled.h4`
+	font-size: 1.2rem;
+	font-weight: 600;
+	color: ${({ theme }) => theme.text.primary};
+	margin-bottom: 0.5rem;
+`;
+const CommitList = styled.ul`
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	border-radius: 8px;
+	background: ${({ theme }) => theme.ui.panel};
+	border: none;
+	display: flex;
+	flex-direction: column;
+	gap: 1.2rem;
+	max-height: 220px;
+	overflow-y: auto;
+`;
+const CommitItem = styled.li`
+	background: ${({ theme }) => theme.ui.background};
+	border-radius: 8px;
+	box-shadow: 0 2px 8px ${({ theme }) => theme.ui.shadow};
+	padding: 1.4rem 2rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.7rem;
+	font-size: 1.4rem;
+	color: ${({ theme }) => theme.text.primary};
+	transition: box-shadow 0.2s;
+	&:hover {
+		box-shadow: 0 4px 16px ${({ theme }) => theme.ui.shadow};
+	}
+	b {
+		font-size: 1.5rem;
+		color: ${({ theme }) => theme.text.accent};
+	}
+	.commit-meta {
+		display: flex;
+		align-items: center;
+		gap: 1.2rem;
+		font-size: 1.2rem;
+	}
+	.commit-link {
+		color: ${({ theme }) => theme.interactive.primary};
+		text-decoration: underline;
+		font-size: 1.2rem;
+		margin-left: 0.5rem;
+	}
+	.pr-link {
+		color: ${({ theme }) => theme.interactive.primary};
+		font-weight: 600;
+		margin-left: 0.5rem;
+		font-size: 1.2rem;
+		text-decoration: underline;
+	}
 `;

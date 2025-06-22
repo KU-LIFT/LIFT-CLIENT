@@ -16,7 +16,7 @@ import AIChatModal from '@/components/AIChatModal';
 import useProjectKeyStore from '@/stores/useProjectKeyStore';
 import { useBoards } from '@/apis/board/query';
 import { BoardType } from '@/types/Board';
-import { useGetTasks } from '@/apis/task/query';
+import { useGetTasks, useGetTask } from '@/apis/task/query';
 import TaskModal from '@/components/TaskModal';
 import { TaskType } from '@/types/TaskType';
 import { useMoveTask } from '@/apis/task/moveTask/query';
@@ -47,6 +47,7 @@ function BoardPage() {
 	// task edit 모달
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
+	const { data: refetchedTask, refetch: refetchTask } = useGetTask(projectKey, selectedTask?.id ?? 0);
 
 	const handleTaskClick = (task: TaskType) => {
 		setSelectedTask(task);
@@ -98,6 +99,13 @@ function BoardPage() {
 		setActiveTask(null);
 	};
 
+	const handleBranchLinked = async () => {
+		if (selectedTask) {
+			const { data } = await refetchTask();
+			if (data) setSelectedTask(data);
+		}
+	};
+
 	if (isLoading) return <div>로딩 중...</div>;
 	if (isError) return <div>에러 발생</div>;
 	if (!boardsData?.length) return <div>데이터 없음</div>;
@@ -141,7 +149,12 @@ function BoardPage() {
 					onClose={() => setAddModal({ open: false, columnName: '', columnId: 0 })}
 				/>
 				{selectedTask && (
-					<EditTaskModal open={isEditModalOpen} task={selectedTask} onClose={() => setIsEditModalOpen(false)} />
+					<EditTaskModal
+						open={isEditModalOpen}
+						task={selectedTask}
+						onClose={() => setIsEditModalOpen(false)}
+						onBranchLinked={handleBranchLinked}
+					/>
 				)}
 			</BoardPageLayout>
 			{/* DragOverlay 에 activeTask가 있을 때만 렌더링 */}

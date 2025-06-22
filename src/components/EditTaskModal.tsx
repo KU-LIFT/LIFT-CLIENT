@@ -7,8 +7,9 @@ import { UpdateTaskRequest } from '@/apis/task/Task';
 import useUserStore from '@/stores/useUserStore';
 import Button from './common/Button';
 import IconButton from './common/IconButton';
-import { useBranches, useCreateBranch, useCommits } from '@/apis/git/query';
+import { useBranches, useCreateBranch, useCommits, usePullRequests } from '@/apis/git/query';
 import { css } from '@emotion/react';
+import { useQueryClient } from '@tanstack/react-query';
 
 const EditTaskModal = ({
 	open,
@@ -22,6 +23,7 @@ const EditTaskModal = ({
 	onBranchLinked?: () => void;
 }) => {
 	const projectKey = useProjectKeyStore((store) => store.projectKey);
+	const queryClient = useQueryClient();
 	const [name, setName] = useState('');
 	const [description, setDescription] = useState('');
 	const updateTaskMutation = useUpdateTask(projectKey, task.id);
@@ -29,21 +31,25 @@ const EditTaskModal = ({
 
 	// --- Github 연동 관련 ---
 	const { data: branches } = useBranches(projectKey, task.id);
-	const createBranch = useCreateBranch(projectKey, task.id);
+	const createBranchMutation = useCreateBranch(projectKey, task.id);
 	const [newBranch, setNewBranch] = useState('');
 	const [baseBranch, setBaseBranch] = useState('');
 	const [selectedBranch, setSelectedBranch] = useState(task.githubBranch || '');
+	const [tempSelectedBranch, setTempSelectedBranch] = useState(task.githubBranch || '');
 	const { data: commits } = useCommits(projectKey, task.id);
+	const { data: pullRequests } = usePullRequests(projectKey, task.id);
 
 	useEffect(() => {
 		if (task) {
 			setName(task.name);
 			setDescription(task.description ?? '');
 			setSelectedBranch(task.githubBranch || '');
+			setTempSelectedBranch(task.githubBranch || '');
 		}
 	}, [task]);
 
-	const handleUpdate = () => {
+	// 태스크의 이름, 설명, 브랜치 등 모든 정보를 업데이트하는 함수
+	const handleUpdate = (branchToUpdate?: string) => {
 		if (!name) {
 			alert('태스크 이름은 필수 항목입니다.');
 			return;
@@ -53,27 +59,40 @@ const EditTaskModal = ({
 			name,
 			description,
 			columnId: task.columnId,
-			assigneeId: currentUserId!,
+			assigneeId: task.assigneeId || currentUserId!,
 			priority: task.priority,
+			// 브랜치 연동 버튼을 누른 경우, 해당 브랜치로 업데이트
+			githubBranch: branchToUpdate || selectedBranch,
 		};
 
 		updateTaskMutation.mutate(payload, {
+			onSuccess: () => {
+				if (branchToUpdate) {
+					setSelectedBranch(branchToUpdate);
+					alert('브랜치가 연동되었습니다!');
+					queryClient.invalidateQueries({ queryKey: ['gitCommits', projectKey, task.id] });
+					onBranchLinked?.();
+				} else {
+					onClose(); // 저장 버튼을 누른 경우 모달 닫기
+				}
+			},
 			onError: (error: any) => console.error(error.response?.data),
-			onSuccess: onClose,
 		});
 	};
 
-	const handleBranchLink = (branchName: string, baseBranchName?: string) => {
-		createBranch.mutate(
+	// 새 브랜치를 '생성'하고 태스크에 연결하는 함수
+	const handleCreateAndLinkBranch = (branchName: string, baseBranchName?: string) => {
+		createBranchMutation.mutate(
 			{ newBranch: branchName, baseBranch: baseBranchName },
 			{
 				onSuccess: () => {
 					setSelectedBranch(branchName);
-					alert('브랜치가 연동되었습니다!');
-					onBranchLinked && onBranchLinked();
+					setTempSelectedBranch(branchName);
+					alert('브랜치가 생성 및 연동되었습니다!');
+					onBranchLinked?.();
 				},
 				onError: (err: any) => {
-					alert(err?.response?.data?.message || '브랜치 연동 실패');
+					alert(err?.response?.data?.message || '브랜치 생성 실패');
 				},
 			}
 		);
@@ -106,7 +125,7 @@ const EditTaskModal = ({
 					<GithubSection>
 						<GithubSectionTitle>깃 브랜치 연동</GithubSectionTitle>
 						<BranchRow>
-							<BranchSelect value={selectedBranch} onChange={(e) => setSelectedBranch(e.target.value)}>
+							<BranchSelect value={tempSelectedBranch} onChange={(e) => setTempSelectedBranch(e.target.value)}>
 								<option value="">브랜치 선택</option>
 								{branches?.map((b) => (
 									<option key={b.name} value={b.name}>
@@ -117,10 +136,11 @@ const EditTaskModal = ({
 							<Button
 								type="primary"
 								label="연동"
-								onClick={() => handleBranchLink(selectedBranch)}
+								onClick={() => handleUpdate(tempSelectedBranch)}
 								additionalCss={css`
 									min-width: 80px;
 								`}
+								disabled={!tempSelectedBranch || tempSelectedBranch === selectedBranch}
 							/>
 						</BranchRow>
 						<BranchRow>
@@ -133,10 +153,11 @@ const EditTaskModal = ({
 							<Button
 								type="primary"
 								label="생성+연동"
-								onClick={() => handleBranchLink(newBranch, baseBranch)}
+								onClick={() => handleCreateAndLinkBranch(newBranch, baseBranch)}
 								additionalCss={css`
 									min-width: 120px;
 								`}
+								disabled={!newBranch}
 							/>
 						</BranchRow>
 						{selectedBranch && (
@@ -172,10 +193,34 @@ const EditTaskModal = ({
 							</CommitList>
 						</CommitSection>
 					)}
+
+					{/* --- PR 리스트 --- */}
+					{selectedBranch && pullRequests && pullRequests.length > 0 && (
+						<PrSection>
+							<PrSectionTitle>Pull Request 내역</PrSectionTitle>
+							<PrList>
+								{pullRequests.map((pr) => (
+									<PrItem key={pr.sha}>
+										<div>
+											<b>PR #{pr.sha.slice(0, 7)}</b>
+										</div>
+										<div className="pr-meta">
+											상태: <span className={`pr-state ${pr.state}`}>{pr.state}</span>
+											{pr.url && (
+												<a className="pr-link" href={pr.url} target="_blank" rel="noreferrer">
+													GitHub에서 보기
+												</a>
+											)}
+										</div>
+									</PrItem>
+								))}
+							</PrList>
+						</PrSection>
+					)}
 				</ModalContent>
 				<ModalFooter>
 					<Button type="secondary" label="취소" onClick={onClose} />
-					<Button type="primary" label="저장" onClick={handleUpdate} />
+					<Button type="primary" label="저장" onClick={() => handleUpdate()} />
 				</ModalFooter>
 			</ModalContainer>
 		</BackDrop>
@@ -199,13 +244,13 @@ const BackDrop = styled.div`
 
 const ModalContainer = styled.div`
 	width: 500px;
-	max-height: 80vh;
+	min-height: 80vh;
+	max-height: 90vh;
 	background-color: ${({ theme }) => theme.ui.panel};
 	border-radius: 8px;
 	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 	display: flex;
 	flex-direction: column;
-	overflow-y: auto;
 `;
 
 const ModalHeader = styled.div`
@@ -377,6 +422,64 @@ const CommitItem = styled.li`
 		text-decoration: underline;
 		font-size: 1.2rem;
 		margin-left: 0.5rem;
+	}
+	.pr-link {
+		color: ${({ theme }) => theme.interactive.primary};
+		font-weight: 600;
+		margin-left: 0.5rem;
+		font-size: 1.2rem;
+		text-decoration: underline;
+	}
+`;
+
+const PrSection = styled.div`
+	margin-top: 2.4rem;
+`;
+
+const PrSectionTitle = styled.h4`
+	font-size: 1.2rem;
+	font-weight: 600;
+	color: ${({ theme }) => theme.text.primary};
+	margin-bottom: 0.5rem;
+`;
+
+const PrList = styled.ul`
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	border-radius: 8px;
+	background: ${({ theme }) => theme.ui.panel};
+	border: none;
+	display: flex;
+	flex-direction: column;
+	gap: 1.2rem;
+	max-height: 220px;
+	overflow-y: auto;
+`;
+
+const PrItem = styled.li`
+	background: ${({ theme }) => theme.ui.background};
+	border-radius: 8px;
+	box-shadow: 0 2px 8px ${({ theme }) => theme.ui.shadow};
+	padding: 1.4rem 2rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.7rem;
+	font-size: 1.4rem;
+	color: ${({ theme }) => theme.text.primary};
+	transition: box-shadow 0.2s;
+	&:hover {
+		box-shadow: 0 4px 16px ${({ theme }) => theme.ui.shadow};
+	}
+	b {
+		font-size: 1.5rem;
+		color: ${({ theme }) => theme.text.accent};
+	}
+	.pr-meta {
+		display: flex;
+		align-items: center;
+		gap: 1.2rem;
+		font-size: 1.2rem;
 	}
 	.pr-link {
 		color: ${({ theme }) => theme.interactive.primary};

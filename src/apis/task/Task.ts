@@ -6,6 +6,7 @@ export type CreateTaskRequest = {
 	priority: 'HIGH' | 'MEDIUM' | 'LOW';
 	dueDate?: string;
 	tags?: string[];
+	githubBranch?: string;
 };
 export type UpdateTaskRequest = CreateTaskRequest;
 

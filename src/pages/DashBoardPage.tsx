@@ -36,11 +36,18 @@ function DashBoardPage() {
 
 	const { mutate } = useCreateProject();
 	const handleCreateProject = (project: Project) => {
-		mutate({
-			projectKey: project.projectKey,
-			name: project.name,
-			description: project.description,
-		});
+		mutate(
+			{
+				projectKey: project.projectKey,
+				name: project.name,
+				description: project.description,
+			},
+			{
+				onSuccess: () => {
+					setShowModal(false);
+				},
+			}
+		);
 	};
 
 	const { data: projects, isLoading, isError } = useUserProjects();

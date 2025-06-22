@@ -1,6 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getUserProjects } from '@/apis/project/axios';
 import { createProject, deleteProject, getProject, updateProject } from '@/apis/project/axios';
+import { Project } from '@/types/Project';
+import useProjectKeyStore from '@/stores/useProjectKeyStore';
+import { useNavigate } from 'react-router-dom';
 
 // 전체 프로젝트 리스트
 export const useUserProjects = () =>
@@ -20,9 +23,16 @@ export const useProject = (projectKey: string) =>
 // 프로젝트 생성
 export const useCreateProject = () => {
 	const queryClient = useQueryClient();
+	const navigate = useNavigate();
+	const setProjectKey = useProjectKeyStore((state) => state.setProjectKey);
+
 	return useMutation({
 		mutationFn: createProject,
-		onSuccess: () => queryClient.invalidateQueries({ queryKey: ['userProjects'] }),
+		onSuccess: (data: Project) => {
+			queryClient.invalidateQueries({ queryKey: ['userProjects'] });
+			setProjectKey(data.projectKey);
+			navigate('/board');
+		},
 	});
 };
 

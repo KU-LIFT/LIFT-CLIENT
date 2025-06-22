@@ -47,7 +47,7 @@ function BoardPage() {
 	// task edit 모달
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
-	const { data: refetchedTask, refetch: refetchTask } = useGetTask(projectKey, selectedTask?.id ?? 0);
+	const { refetch: refetchTask } = useGetTask(projectKey, selectedTask?.id ?? 0);
 
 	const handleTaskClick = (task: TaskType) => {
 		setSelectedTask(task);

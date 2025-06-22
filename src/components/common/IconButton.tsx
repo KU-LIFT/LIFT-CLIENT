@@ -12,7 +12,7 @@ type IconButtonProps = {
 	size?: SizeType;
 	disabled?: boolean;
 	iconName: keyof typeof Icn;
-	onClick?: () => void;
+	onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
 	additionalCss?: SerializedStyles;
 	dot?: boolean;
 };
@@ -26,7 +26,7 @@ function IconButton({
 	additionalCss,
 	dot,
 }: IconButtonProps) {
-	const { color, colorToken, colors } = useTheme();
+	const { color, colorToken, interactive, text, ui } = useTheme();
 	// 사이즈별 분기
 	const buttonSizes: Record<SizeType, SerializedStyles> = {
 		big: css`
@@ -50,17 +50,15 @@ function IconButton({
 		if (disabled) {
 			if (type === 'solid')
 				return css`
-					color: ${color.Grey.White};
-
-					background-color: ${color.Blue.Blue2};
+					color: ${text.inverse};
+					background-color: ${interactive.secondary};
 				`;
 			return css`
-				color: ${color.Grey.Grey4};
+				color: ${text.disabled};
 				${border &&
 				css`
 					box-sizing: border-box;
-
-					border: solid 1px ${color.Grey.Grey3};
+					border: solid 1px ${ui.border};
 				`};
 			`;
 		}
@@ -87,9 +85,15 @@ function IconButton({
 		`;
 	};
 	const buttonStyles: Record<IconBtnType, SerializedStyles> = {
-		solid: getIconBtnStyles(color.Grey.White, color.Blue.Blue6, color.Blue.Blue7, color.Blue.Blue8, false),
-		normal: getIconBtnStyles(color.Grey.Black, colors.transparent, color.Grey.Grey3, color.Grey.Grey4, false),
-		outlined: getIconBtnStyles(color.Grey.Grey5, color.Grey.White, color.Grey.Grey3, color.Grey.Grey4, true),
+		solid: getIconBtnStyles(
+			text.inverse,
+			interactive.primary,
+			interactive.primaryHover,
+			interactive.primaryActive,
+			false
+		),
+		normal: getIconBtnStyles(text.primary, 'transparent', interactive.secondary, color.Grey[300], false),
+		outlined: getIconBtnStyles(text.secondary, ui.panel, interactive.secondary, color.Grey[300], true),
 	};
 
 	const IconBtnContainer = styled.div`

@@ -1,6 +1,7 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import styled from '@emotion/styled';
 import { useState, useEffect } from 'react';
+import Icon from '@/components/common/Icon';
 
 function MainLayout() {
 	const navigate = useNavigate();
@@ -14,28 +15,35 @@ function MainLayout() {
 	const handleLogout = () => {
 		localStorage.removeItem('access_token');
 		localStorage.removeItem('refresh_token');
+		localStorage.removeItem('projectKey');
 		navigate('/login');
 	};
+
+	const menuItems = [
+		{ path: '/', icon: 'IcnDashboard', label: 'Dashboard' },
+		{ path: '/board', icon: 'IcnTodolist', label: 'Board' },
+		{ path: '/user', icon: 'IcnPlus', label: 'UserPage' },
+		{ path: '/setting', icon: 'IcnSetting', label: 'Settings' },
+	];
 
 	return (
 		<LayoutWrapper>
 			<Sidebar>
-				<Logo>LIFT</Logo>
-				<MenuList>
-					<MenuItem selected={selectedMenu === '/'} onClick={() => navigate('/')}>
-						Dashboard
-					</MenuItem>
-					<MenuItem selected={selectedMenu === '/board'} onClick={() => navigate('/board')}>
-						Board
-					</MenuItem>
-					<MenuItem selected={selectedMenu === '/user'} onClick={() => navigate('/user')}>
-						UserPage
-					</MenuItem>
-					<MenuItem selected={selectedMenu === '/setting'} onClick={() => navigate('/setting')}>
-						Settings
-					</MenuItem>
-				</MenuList>
-				<LogoutBtn onClick={handleLogout}>Log out</LogoutBtn>
+				<div>
+					<Logo onClick={() => navigate('/')}>LIFT</Logo>
+					<MenuList>
+						{menuItems.map(({ path, icon, label }) => (
+							<MenuItem key={path} selected={selectedMenu === path} onClick={() => navigate(path)}>
+								<Icon name={icon as any} size="medium" />
+								<span>{label}</span>
+							</MenuItem>
+						))}
+					</MenuList>
+				</div>
+				<LogoutBtn onClick={handleLogout}>
+					<Icon name="IcnEnter" size="medium" />
+					<span>Log out</span>
+				</LogoutBtn>
 			</Sidebar>
 
 			<Content>
@@ -51,68 +59,70 @@ const LayoutWrapper = styled.div`
 	display: flex;
 	height: 100vh;
 	overflow: hidden;
+	background-color: ${({ theme }) => theme.ui.background};
 `;
 
 const Sidebar = styled.nav`
-	width: 10%;
-	flex-direction: column;
-
-	background-color: #ffffff;
-	position: relative;
+	width: 240px;
+	flex-shrink: 0;
+	background-color: ${({ theme }) => theme.color.Purple[800]};
+	color: ${({ theme }) => theme.color.Purple[100]};
 	display: flex;
-	justify-content: flex-start;
-
-	padding: 2rem;
-	border-radius: 0 20px 20px 0;
-	box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+	flex-direction: column;
+	justify-content: space-between;
+	padding: 2rem 1.2rem;
 `;
 
 const Logo = styled.h1`
-	font-size: 3rem;
-	font-weight: 600;
-	margin-bottom: 40px;
-	color: ${({ theme }) => theme.colors.title};
+	font-size: 2.8rem;
+	font-weight: 700;
+	margin-bottom: 3rem;
+	color: ${({ theme }) => theme.color.Grey.White};
+	padding: 0 1.2rem;
+	cursor: pointer;
 `;
 
 const MenuList = styled.div`
 	display: flex;
 	flex-direction: column;
-	gap: 10px;
+	gap: 0.8rem;
 `;
 
 const MenuItem = styled.button<{ selected?: boolean }>`
-	height: 5rem;
 	width: 100%;
+	padding: 1.2rem;
+	display: flex;
+	align-items: center;
+	gap: 1.2rem;
+
 	background: none;
 	border: none;
-	border-radius: 5px;
+	border-radius: 6px;
 
-	font-size: 2rem;
-	color: ${({ theme, selected }) => (selected ? theme.colors.title : theme.colors.secondaryText)};
+	font-size: 1.6rem;
+	font-weight: 500;
+	color: ${({ theme, selected }) => (selected ? theme.color.Grey.White : theme.color.Purple[200])};
 	text-align: left;
 	cursor: pointer;
 
-	background-color: ${({ theme, selected }) => (selected ? theme.colors.hover : 'transparent')};
+	background-color: ${({ theme, selected }) => (selected ? theme.color.Purple[900] : 'transparent')};
 
 	&:hover {
-		color: ${({ theme }) => theme.colors.title};
-		background-color: ${({ theme }) => theme.colors.hover};
+		background-color: ${({ theme }) => theme.color.Purple[700]};
+		color: ${({ theme }) => theme.color.Grey.White};
 	}
 `;
 
-const LogoutBtn = styled.button`
-	position: absolute;
-	bottom: 20px;
-	background: none;
-	border: none;
-	font-size: 2rem;
-	color: ${({ theme }) => theme.colors.primaryText};
-	cursor: pointer;
-	text-align: left;
+const LogoutBtn = styled(MenuItem)`
+	color: ${({ theme }) => theme.color.Purple[200]};
+
+	&:hover {
+		color: ${({ theme }) => theme.color.Grey.White};
+		background-color: ${({ theme }) => theme.color.Purple[700]};
+	}
 `;
 
 const Content = styled.main`
 	flex-grow: 1;
-	padding: 40px;
-	background: ${({ theme }) => theme.colors.background};
+	overflow-y: auto;
 `;

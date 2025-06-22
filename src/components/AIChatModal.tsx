@@ -1,340 +1,198 @@
 import { useState } from 'react';
 import styled from '@emotion/styled';
-import CardStatus from './CardStatus';
-import Icon from './common/Icon';
+import { TaskType } from '@/types/TaskType';
+import { useImportTodosFromText } from '@/apis/ai/query';
+import useProjectKeyStore from '@/stores/useProjectKeyStore';
+import Task from './Task';
+import Button from './common/Button';
+import IconButton from './common/IconButton';
 
-type Issue = {
-	id: number;
-	name: string;
-	description: string;
+type AIChatModalProps = {
 	columnId: number;
-	assigneeId: number;
-	priority: string;
-	dueDate: string | null;
-	tags: string[];
-	createdAt: string;
-	updatedAt: string | null;
-	createdById: number;
-	updatedById: number | null;
+	onClose: () => void;
 };
 
-const dummyIssues: Issue[] = [
-	{
-		id: 1,
-		name: '사용자 인증',
-		description: '이메일/비밀번호 로그인, OAuth2(Google, GitHub) 로그인',
-		columnId: 1,
-		assigneeId: 1,
-		priority: 'MEDIUM',
-		dueDate: null,
-		tags: ['AI-import'],
-		createdAt: '2025-05-06T07:04:15.879990666',
-		updatedAt: null,
-		createdById: 1,
-		updatedById: null,
-	},
-	{
-		id: 2,
-		name: '게시물 관리',
-		description: '텍스트·이미지·동영상 업로드, 댓글·대댓글 기능, 좋아요·공유 기능',
-		columnId: 1,
-		assigneeId: 1,
-		priority: 'MEDIUM',
-		dueDate: null,
-		tags: ['AI-import'],
-		createdAt: '2025-05-06T07:04:15.901483113',
-		updatedAt: null,
-		createdById: 1,
-		updatedById: null,
-	},
-	{
-		id: 3,
-		name: '알림',
-		description: '팔로우 사용자 활동 알림, 댓글·좋아요 알림',
-		columnId: 1,
-		assigneeId: 1,
-		priority: 'MEDIUM',
-		dueDate: null,
-		tags: ['AI-import'],
-		createdAt: '2025-05-06T07:04:15.913090004',
-		updatedAt: null,
-		createdById: 1,
-		updatedById: null,
-	},
-	{
-		id: 4,
-		name: '사용자 설정',
-		description: '프로필 수정, 알림 설정',
-		columnId: 1,
-		assigneeId: 1,
-		priority: 'MEDIUM',
-		dueDate: null,
-		tags: ['AI-import'],
-		createdAt: '2025-05-06T07:04:15.922222041',
-		updatedAt: null,
-		createdById: 1,
-		updatedById: null,
-	},
-	{
-		id: 5,
-		name: '팔로우 기능',
-		description: '사용자 간 팔로우 및 언팔로우 기능 구현',
-		columnId: 1,
-		assigneeId: 1,
-		priority: 'LOW',
-		dueDate: null,
-		tags: ['AI-import'],
-		createdAt: '2025-05-06T07:04:15.933512000',
-		updatedAt: null,
-		createdById: 1,
-		updatedById: null,
-	},
-	{
-		id: 6,
-		name: '이미지 최적화',
-		description: '업로드된 이미지 리사이징 및 압축 처리',
-		columnId: 1,
-		assigneeId: 1,
-		priority: 'LOW',
-		dueDate: null,
-		tags: ['AI-import'],
-		createdAt: '2025-05-06T07:04:15.944000000',
-		updatedAt: null,
-		createdById: 1,
-		updatedById: null,
-	},
-	{
-		id: 7,
-		name: '접근 제어',
-		description: '비공개 게시물, 신고 기능, 차단 사용자 처리',
-		columnId: 1,
-		assigneeId: 1,
-		priority: 'HIGH',
-		dueDate: null,
-		tags: ['AI-import'],
-		createdAt: '2025-05-06T07:04:15.955000000',
-		updatedAt: null,
-		createdById: 1,
-		updatedById: null,
-	},
-	{
-		id: 8,
-		name: '댓글 정렬 기능',
-		description: '좋아요순, 최신순 등 댓글 정렬 기능 추가',
-		columnId: 1,
-		assigneeId: 1,
-		priority: 'MEDIUM',
-		dueDate: null,
-		tags: ['AI-import'],
-		createdAt: '2025-05-06T07:04:15.966000000',
-		updatedAt: null,
-		createdById: 1,
-		updatedById: null,
-	},
-];
-
-const AIChatModal = ({ onClose }: { onClose: () => void }) => {
+const AIChatModal = ({ columnId, onClose }: AIChatModalProps) => {
 	const [input, setInput] = useState('');
-	const [issues, setIssues] = useState<Issue[]>([]);
+	const [tasks, setTasks] = useState<TaskType[]>([]);
+	const projectKey = useProjectKeyStore((store) => store.projectKey);
+
+	const { mutate, isPending, error } = useImportTodosFromText(projectKey, columnId);
 
 	const handleGenerateIssues = () => {
-		// 이슈 자동 생성 로직 (여기서는 dummyIssues를 사용)
-		setIssues(dummyIssues);
+		if (!input.trim()) return;
+		mutate(
+			{ text: input },
+			{
+				onSuccess: (data) => {
+					setTasks(data);
+				},
+			}
+		);
 	};
 
 	return (
-		<ModalOverlay>
-			<ModalContent>
+		<BackDrop onClick={(e) => (e.target === e.currentTarget ? onClose() : null)}>
+			<ModalContainer>
 				<ModalHeader>
-					<ModalTitle>AI 이슈 생성</ModalTitle>
-					<CloseButton onClick={onClose}>X</CloseButton>
+					<Title>AI로 태스크 생성</Title>
+					<IconButton type="normal" iconName="IcnX" onClick={onClose} />
 				</ModalHeader>
 				<ModalBody>
-					<InputContainer>
-						<TextArea placeholder="요구사항을 입력하세요..." value={input} onChange={(e) => setInput(e.target.value)} />
-						<GenerateButton onClick={handleGenerateIssues}>
-							이슈 자동 생성
-							<Icon name="IcnEnter" />
-						</GenerateButton>
-					</InputContainer>
-
-					<RightSection>
-						<ModalTitle>생성된 이슈</ModalTitle>
+					<LeftPanel>
+						<SubTitle>1. 요구사항 입력</SubTitle>
+						<Textarea
+							placeholder="예시) 로그인 페이지를 만들어줘. 아이디와 비밀번호 입력 필드, 그리고 로그인 버튼이 필요해."
+							value={input}
+							onChange={(e) => setInput(e.target.value)}
+						/>
+						<Button
+							type="primary"
+							onClick={handleGenerateIssues}
+							disabled={isPending}
+							label={isPending ? '생성 중...' : '자동 생성'}
+						/>
+						{error && <ErrorText>오류: 태스크 생성에 실패했습니다. 다시 시도해주세요.</ErrorText>}
+					</LeftPanel>
+					<RightPanel>
+						<SubTitle>2. 생성된 태스크 확인</SubTitle>
 						<IssueList>
-							{issues.map((issue) => (
-								<CardItem key={issue.id}>
-									<CardStatus status="TODO" />
-									<CardTitle>{issue.name}</CardTitle>
-									<CardDescription>{issue.description}</CardDescription>
-								</CardItem>
-							))}
+							{tasks.length > 0 ? (
+								tasks.map((task) => <Task key={task.id} task={task} />)
+							) : (
+								<Placeholder>
+									{isPending ? 'AI가 태스크를 생성하고 있습니다...' : '이곳에 생성된 태스크가 표시됩니다.'}
+								</Placeholder>
+							)}
 						</IssueList>
-					</RightSection>
+					</RightPanel>
 				</ModalBody>
-			</ModalContent>
-		</ModalOverlay>
+				<ModalFooter>
+					<Button type="secondary" label="닫기" onClick={onClose} />
+				</ModalFooter>
+			</ModalContainer>
+		</BackDrop>
 	);
 };
 
 export default AIChatModal;
 
-const ModalOverlay = styled.div`
+const BackDrop = styled.div`
 	position: fixed;
 	top: 0;
 	left: 0;
-	width: 100%;
-	height: 100%;
-	background: rgba(0, 0, 0, 0.5);
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.4);
 	display: flex;
-	justify-content: center;
 	align-items: center;
+	justify-content: center;
 	z-index: 1000;
 `;
 
-const ModalContent = styled.div`
-	width: 80%;
-	height: 80%;
-	background: white;
-	border-radius: 12px;
-	padding: 3rem;
-	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+const ModalContainer = styled.div`
+	width: 80vw;
+	max-width: 1200px;
+	height: 80vh;
+	background-color: ${({ theme }) => theme.ui.panel};
+	border-radius: 8px;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 	display: flex;
 	flex-direction: column;
-	gap: 2rem;
-
 	overflow: hidden;
 `;
 
-const ModalHeader = styled.div`
+const ModalHeader = styled.header`
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	border-bottom: 1px solid #e0e0e0;
-	padding-bottom: 1rem;
+	padding: 1.6rem 2rem;
+	border-bottom: 1px solid ${({ theme }) => theme.ui.border};
+	flex-shrink: 0;
 `;
 
-const ModalTitle = styled.h2`
-	font-size: 2.4rem;
-	font-weight: 700;
-	color: #333;
-`;
-
-const CloseButton = styled.button`
-	background: none;
-	border: none;
-	font-size: 2rem;
-	cursor: pointer;
-`;
-
-const ModalBody = styled.div`
-	display: flex;
-	flex-direction: column;
-	gap: 5rem;
-`;
-
-const InputContainer = styled.div`
-	display: flex;
-	flex-direction: column;
-	gap: 2rem;
-
-	height: 40rem;
-	max-height: 60rem;
-`;
-
-const TextArea = styled.textarea`
-	padding: 2rem;
-	box-sizing: border-box;
+const Title = styled.h2`
 	font-size: 1.8rem;
-	border: 1px solid #ccc;
-	border-radius: 8px;
-	resize: none; /* 사용자가 크기를 조정하지 못하도록 설정 */
-	width: 100%;
-	height: 100%; /* 높이를 늘려 더 많은 텍스트를 입력할 수 있도록 설정 */
-	line-height: 1.8rem;
+	font-weight: 600;
+	color: ${({ theme }) => theme.text.primary};
 `;
 
-const GenerateButton = styled.button`
+const ModalBody = styled.main`
 	display: flex;
-	justify-content: center;
-	align-items: center;
-	flex-direction: row;
+	flex-grow: 1;
+	height: 100%;
+`;
 
-	width: fit-content;
-	height: fit-content;
-	padding: 1rem 2rem;
-	font-size: 2rem;
-	color: white;
-	background-color: #007bff;
-	border: none;
-	border-radius: 8px;
-	cursor: pointer;
-	transition: background-color 0.2s ease;
+const Panel = styled.div`
+	padding: 2rem;
+	display: flex;
+	flex-direction: column;
+	gap: 1.6rem;
+`;
 
-	gap: 1rem;
+const LeftPanel = styled(Panel)`
+	width: 50%;
+	border-right: 1px solid ${({ theme }) => theme.ui.border};
+`;
 
-	&:hover {
-		background-color: #0056b3;
+const RightPanel = styled(Panel)`
+	width: 50%;
+`;
+
+const SubTitle = styled.h3`
+	font-size: 1.6rem;
+	font-weight: 600;
+	color: ${({ theme }) => theme.text.primary};
+	margin-bottom: 0.8rem;
+`;
+
+const Textarea = styled.textarea`
+	width: 100%;
+	height: 100%;
+	padding: 1.2rem;
+	font-size: 1.4rem;
+	background-color: ${({ theme }) => theme.ui.background};
+	border: 1px solid ${({ theme }) => theme.ui.border};
+	border-radius: 6px;
+	color: ${({ theme }) => theme.text.primary};
+	resize: none;
+	box-sizing: border-box;
+	font-family: inherit;
+
+	&:focus {
+		outline: none;
+		border-color: ${({ theme }) => theme.interactive.primary};
 	}
+`;
+
+const ErrorText = styled.p`
+	font-size: 1.4rem;
+	color: ${({ theme }) => theme.interactive.danger};
 `;
 
 const IssueList = styled.div`
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-
-	gap: 0.5rem; /* 카드 간 간격 */
-	height: 60rem;
-	overflow: hidden; /* 스크롤 비활성화 */
-	overflow-y: scroll; /* 스크롤 활성화 */
-`;
-
-const CardItem = styled.div`
-	width: 34rem;
-	height: 14rem;
+	flex-grow: 1;
+	overflow-y: auto;
 	display: flex;
 	flex-direction: column;
-	justify-content: flex-start;
-	align-items: flex-start;
-
-	border: 2px solid ${({ theme }) => theme.colors.border};
-	border-radius: 20px;
-	background-color: ${({ theme }) => theme.colors.cardBackground};
-	box-shadow: 0 4px 8px ${({ theme }) => theme.colors.shadow};
-
-	box-sizing: border-box;
-	padding: 2rem;
-
-	gap: 1.5rem;
-
-	cursor: pointer;
-
-	&:hover {
-		transform: translateY(-2px);
-		box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
-	}
+	gap: 1.2rem;
+	padding-right: 1rem;
 `;
 
-const CardTitle = styled.p`
-	font-size: 2rem;
-	font-weight: 500;
-	color: ${({ theme }) => theme.colors.title};
-`;
-
-const CardDescription = styled.p`
-	font-size: 1.6rem;
-	font-weight: 400;
-	line-height: 2.4rem;
-	color: ${({ theme }) => theme.colors.secondaryText};
-	overflow: hidden;
-	text-overflow: ellipsis;
-	display: -webkit-box;
-	-webkit-line-clamp: 1; /* 최대 2줄로 제한 */
-	-webkit-box-orient: vertical;
-`;
-
-const RightSection = styled.div`
+const Placeholder = styled.div`
 	display: flex;
-	flex-direction: column;
-	gap: 2rem;
-	width: 100%;
+	align-items: center;
+	justify-content: center;
 	height: 100%;
+	color: ${({ theme }) => theme.text.secondary};
+	font-size: 1.6rem;
+`;
+
+const ModalFooter = styled.footer`
+	display: flex;
+	justify-content: flex-end;
+	gap: 1rem;
+	padding: 1.6rem 2rem;
+	border-top: 1px solid ${({ theme }) => theme.ui.border};
+	flex-shrink: 0;
 `;

@@ -3,35 +3,44 @@ import { useState } from 'react';
 
 import styled from '@emotion/styled';
 // import { User } from '@/types/User';
-import { usersdummy } from '@/datas/dummyData';
+import { useGetMembers, useUpdateMemberRole, useDeleteMember } from '@/apis/member/query';
 import Icon from '@/components/common/Icon';
+import useProjectKeyStore from '@/stores/useProjectKeyStore';
+import { getMemberType } from '@/apis/member/Member';
+import Button from '@/components/common/Button';
+import IconButton from '@/components/common/IconButton';
+import InviteMemberModal from '@/components/InviteMemberModal';
 
 const ROLE_OPTIONS = [
 	{ label: '전체', value: 'ALL' },
-	{ label: 'USER', value: 'USER' },
-	{ label: 'ADMIN', value: 'ADMIN' },
+	{ label: 'OWNER', value: 'OWNER' },
+	{ label: 'MEMBER', value: 'MEMBER' },
 ];
 
 export default function UserListPage() {
-	// const [users, setUsers] = useState<User[]>(usersdummy);
-	// const [error, setError] = useState<string | null>(null);
+	const projectKey = useProjectKeyStore((s) => s.projectKey);
+	const { data: users = [], isLoading, isError } = useGetMembers(projectKey);
+	const updateRoleMutation = useUpdateMemberRole(projectKey);
+	const deleteMemberMutation = useDeleteMember(projectKey);
 
-	const [roleFilter, setRoleFilter] = useState<'ALL' | 'USER' | 'ADMIN'>('ALL');
+	const [roleFilter, setRoleFilter] = useState<'ALL' | 'OWNER' | 'MEMBER'>('ALL');
+	const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
-	// useEffect(() => {
-	// 	axios
-	// 		.get('/users')
-	// 		.then((res) => setUsers(res.data.data))
-	// 		.catch((err) => {
-	// 			setError('유저 목록을 불러올 수 없습니다.');
-	// 			console.error(err);
-	// 		});
-	// }, []);
+	const handleRoleChange = (memberId: number, role: string) => {
+		updateRoleMutation.mutate({ id: memberId, role });
+	};
 
-	const filteredUsers = roleFilter === 'ALL' ? usersdummy : usersdummy.filter((user) => user.role === roleFilter);
+	const handleDeleteMember = (memberId: number) => {
+		if (window.confirm('정말 이 멤버를 프로젝트에서 제외하시겠습니까?')) {
+			deleteMemberMutation.mutate(memberId);
+		}
+	};
+
+	const filteredUsers = roleFilter === 'ALL' ? users : users.filter((user: getMemberType) => user.role === roleFilter);
 
 	return (
 		<PageLayout>
+			<InviteMemberModal open={isInviteModalOpen} onClose={() => setIsInviteModalOpen(false)} />
 			{/* {error && <p>{error}</p>}
 			{!error && users.length === 0 && <p>등록된 유저가 없습니다.</p>} */}
 
@@ -47,7 +56,7 @@ export default function UserListPage() {
 									name="role"
 									value={option.value}
 									checked={checked}
-									onChange={() => setRoleFilter(option.value as 'ALL' | 'USER' | 'ADMIN')}
+									onChange={() => setRoleFilter(option.value as 'ALL' | 'OWNER' | 'MEMBER')}
 								/>
 								<CustomCheckIcon>{checked ? <Icon name="IcnCheck" /> : <Icon name="IcnCheckboxOff" />}</CustomCheckIcon>
 								<span>{option.label}</span>
@@ -58,19 +67,38 @@ export default function UserListPage() {
 			</FilterCard>
 			<Section>
 				<SectionHeader>
-					<SectionTitle>유저 목록</SectionTitle>
+					<SectionTitle>멤버 목록</SectionTitle>
+					<Button type="primary" label="멤버 초대" onClick={() => setIsInviteModalOpen(true)} />
 				</SectionHeader>
-				<UserList>
-					{filteredUsers.map((user, i) => (
-						<UserCard key={i}>
-							<UserInfo>
-								<UserName>{user.name}</UserName>
-								<UserProvider>{user.provider}</UserProvider>
-							</UserInfo>
-							<UserRole>{user.role}</UserRole>
-						</UserCard>
-					))}
-				</UserList>
+
+				{isLoading && <Message>로딩 중...</Message>}
+				{isError && <Message>사용자 목록을 불러오는 데 실패했습니다.</Message>}
+				{!isLoading && !isError && filteredUsers.length === 0 && <Message>표시할 사용자가 없습니다.</Message>}
+
+				{!isLoading && !isError && (
+					<UserList>
+						{filteredUsers.map((user: getMemberType) => (
+							<UserCard key={user.id}>
+								<UserInfo>
+									<UserName>{user.name}</UserName>
+									<UserEmail>{user.email}</UserEmail>
+								</UserInfo>
+								<UserActions>
+									<RoleSelect value={user.role} onChange={(e) => handleRoleChange(user.id, e.target.value)}>
+										<option value="OWNER">OWNER</option>
+										<option value="MEMBER">MEMBER</option>
+									</RoleSelect>
+									<IconButton
+										type="normal"
+										size="small"
+										iconName="IcnDelete"
+										onClick={() => handleDeleteMember(user.id)}
+									/>
+								</UserActions>
+							</UserCard>
+						))}
+					</UserList>
+				)}
 			</Section>
 		</PageLayout>
 	);
@@ -196,16 +224,40 @@ const UserName = styled.span`
 	color: ${({ theme }) => theme.text.primary};
 `;
 
-const UserProvider = styled.span`
+const UserEmail = styled.span`
 	font-size: 1.3rem;
 	color: ${({ theme }) => theme.text.secondary};
 `;
 
-const UserRole = styled.span`
+const UserActions = styled.div`
+	display: flex;
+	align-items: center;
+	gap: 1.2rem;
+`;
+
+const RoleSelect = styled.select`
+	padding: 0.6rem 1rem;
 	font-size: 1.3rem;
-	font-weight: 500;
+	background-color: ${({ theme }) => theme.ui.background};
+	border: 1px solid ${({ theme }) => theme.ui.border};
+	border-radius: 6px;
+	color: ${({ theme }) => theme.text.primary};
+	transition: border-color 0.2s;
+
+	&:focus {
+		outline: none;
+		border-color: ${({ theme }) => theme.interactive.primary};
+	}
+`;
+
+const Message = styled.div`
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 200px;
+	font-size: 1.6rem;
 	color: ${({ theme }) => theme.text.secondary};
-	background: ${({ theme }) => theme.ui.border};
-	padding: 0.3rem 1.2rem;
-	border-radius: 4px;
+	background-color: ${({ theme }) => theme.ui.panel};
+	border-radius: 8px;
+	border: 1px solid ${({ theme }) => theme.ui.border};
 `;

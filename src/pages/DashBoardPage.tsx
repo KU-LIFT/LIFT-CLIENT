@@ -104,6 +104,13 @@ function DashBoardPage() {
 		};
 	}, []);
 
+	const handleLogout = () => {
+		localStorage.removeItem('access_token');
+		localStorage.removeItem('refresh_token');
+		localStorage.removeItem('projectKey');
+		navigate('/login');
+	};
+
 	return (
 		<PageContainer>
 			<Header>
@@ -120,6 +127,8 @@ function DashBoardPage() {
 								<InfoLabel>이메일</InfoLabel>
 								<InfoValue>{me.email}</InfoValue>
 							</UserInfo>
+							<Divider />
+							<LogoutButton onClick={handleLogout}>로그아웃</LogoutButton>
 						</DropdownMenu>
 					)}
 				</UserMenu>
@@ -382,7 +391,8 @@ const DropdownMenu = styled.div`
 	border: 1px solid ${({ theme }) => theme.ui.border};
 	border-radius: 8px;
 	box-shadow: 0 4px 12px ${({ theme }) => theme.ui.shadow};
-	padding: 1.2rem;
+	padding: 0;
+	overflow: hidden;
 	display: flex;
 	flex-direction: column;
 	gap: 1rem;
@@ -393,6 +403,7 @@ const UserInfo = styled.div`
 	display: flex;
 	flex-direction: column;
 	gap: 0.4rem;
+	padding: 1.2rem;
 `;
 
 const InfoLabel = styled.span`
@@ -404,4 +415,26 @@ const InfoValue = styled.span`
 	font-size: 1.5rem;
 	font-weight: 500;
 	color: ${({ theme }) => theme.text.primary};
+`;
+
+const Divider = styled.div`
+	height: 1px;
+	background-color: ${({ theme }) => theme.ui.border};
+	margin: 0;
+`;
+
+const LogoutButton = styled.button`
+	width: 100%;
+	padding: 1.2rem;
+	background: none;
+	border: none;
+	font-size: 1.4rem;
+	font-weight: 500;
+	color: ${({ theme }) => theme.color.Red[600]};
+	text-align: left;
+	cursor: pointer;
+
+	&:hover {
+		background-color: ${({ theme }) => theme.color.Red[100]};
+	}
 `;

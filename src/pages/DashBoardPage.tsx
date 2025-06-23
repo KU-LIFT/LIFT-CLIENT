@@ -11,6 +11,7 @@ import { Project } from '@/types/Project';
 import styled from '@emotion/styled';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useGetAssignedTasks } from '@/apis/task/query';
 
 function DashBoardPage() {
 	const navigate = useNavigate();
@@ -87,6 +88,8 @@ function DashBoardPage() {
 
 	const [open, setOpen] = useState(false);
 
+	const { data: recentIssues, isLoading: recentIssuesLoading, isError: recentIssuesError } = useGetAssignedTasks(5);
+
 	return (
 		<DashboardLayout>
 			<MemberModal open={open} onClose={() => setOpen(false)} />
@@ -152,19 +155,25 @@ function DashBoardPage() {
 
 			<Section>
 				<SectionHeader>
-					<SectionTitle>최근 작업</SectionTitle>
+					<SectionTitle>최근 내 이슈</SectionTitle>
 				</SectionHeader>
-				<IssueListContainer>
-					{recentIssuesdummy.map((issue, i) => (
-						<IssueItem key={i}>
-							<IssueTextContainer>
-								{issue.date && <IssueDate>{issue.date}</IssueDate>}
-								<IssueTitle>{issue.title}</IssueTitle>
-								<IssueTag>IOOB 프로젝트</IssueTag>
-							</IssueTextContainer>
-						</IssueItem>
-					))}
-				</IssueListContainer>
+				<IssueList>
+					{recentIssuesLoading && <Message>로딩 중...</Message>}
+					{recentIssuesError && <Message>이슈를 불러오는 데 실패했습니다.</Message>}
+					{!recentIssuesLoading && !recentIssuesError && recentIssues?.length === 0 && (
+						<Message>최근 이슈가 없습니다.</Message>
+					)}
+					{!recentIssuesLoading &&
+						!recentIssuesError &&
+						recentIssues?.map((issue) => (
+							<IssueItem key={issue.id}>
+								<IssueName>{issue.name}</IssueName>
+								<IssueDueDate>
+									마감일: {issue.dueDate ? new Date(issue.dueDate).toLocaleDateString() : '미정'}
+								</IssueDueDate>
+							</IssueItem>
+						))}
+				</IssueList>
 			</Section>
 		</DashboardLayout>
 	);
@@ -273,50 +282,41 @@ const FooterIconActions = styled.div`
 	gap: 0.5rem;
 `;
 
-const IssueListContainer = styled.div`
+const IssueList = styled.div`
 	display: flex;
 	flex-direction: column;
 	gap: 1rem;
 `;
 
 const IssueItem = styled.div`
+	padding: 1rem 1.2rem;
+	background-color: ${({ theme }) => theme.ui.panel};
+	border-radius: 6px;
+	border: 1px solid ${({ theme }) => theme.ui.border};
+	font-size: 1.4rem;
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 1.6rem 2rem;
-	background-color: ${({ theme }) => theme.ui.panel};
-	border: 1px solid ${({ theme }) => theme.ui.border};
-	border-radius: 8px;
-	box-shadow: 0 2px 4px ${({ theme }) => theme.ui.shadow};
-	cursor: pointer;
-	transition:
-		transform 0.2s ease-in-out,
-		box-shadow 0.2s ease-in-out;
+	transition: background-color 0.2s;
 
 	&:hover {
-		transform: translateY(-2px);
-		box-shadow: 0 4px 12px ${({ theme }) => theme.ui.shadow};
+		background-color: ${({ theme }) => theme.color.Grey[200]};
 	}
 `;
 
-const IssueTextContainer = styled.div`
-	display: flex;
-	flex-direction: column;
-	gap: 0.5rem;
-`;
-
-const IssueDate = styled.span`
-	font-size: 1.2rem;
-	color: ${({ theme }) => theme.text.secondary};
-`;
-
-const IssueTitle = styled.span`
-	font-size: 1.6rem;
+const IssueName = styled.span`
 	font-weight: 500;
 	color: ${({ theme }) => theme.text.primary};
 `;
 
-const IssueTag = styled.span`
+const IssueDueDate = styled.span`
+	font-size: 1.2rem;
+	color: ${({ theme }) => theme.text.secondary};
+`;
+
+const Message = styled.div`
+	padding: 2rem;
+	text-align: center;
 	font-size: 1.4rem;
 	color: ${({ theme }) => theme.text.secondary};
 `;

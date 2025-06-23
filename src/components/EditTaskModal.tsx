@@ -109,7 +109,7 @@ const EditTaskModal = ({
 		>
 			<ModalContainer>
 				<ModalHeader>
-					<Title>태스크 수정</Title>
+					<Title>태스크 상세조회</Title>
 					<IconButton type="normal" iconName="IcnX" onClick={onClose} />
 				</ModalHeader>
 				<ModalContent>

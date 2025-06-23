@@ -11,7 +11,7 @@ import { useBranches, useCreateBranch, useCommits, usePullRequests } from '@/api
 import { css } from '@emotion/react';
 import { useQueryClient } from '@tanstack/react-query';
 
-const EditTaskModal = ({
+const TaskDetailModal = ({
 	open,
 	task,
 	onClose,
@@ -227,7 +227,7 @@ const EditTaskModal = ({
 	);
 };
 
-export default EditTaskModal;
+export default TaskDetailModal;
 
 const BackDrop = styled.div`
 	position: fixed;

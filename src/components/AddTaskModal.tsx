@@ -6,7 +6,7 @@ import styled from '@emotion/styled';
 import Button from './common/Button';
 import IconButton from './common/IconButton';
 
-const TaskModal = ({
+const AddTaskModal = ({
 	open,
 	onClose,
 	columnName,
@@ -80,7 +80,7 @@ const TaskModal = ({
 	);
 };
 
-export default TaskModal;
+export default AddTaskModal;
 
 // ProjectDetailModal과 동일한 스타일을 많이 공유하므로,
 // 공통 모달 컴포넌트나 스타일을 만드는 것을 고려해볼 수 있습니다.

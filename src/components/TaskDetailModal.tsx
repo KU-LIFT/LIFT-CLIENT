@@ -31,6 +31,7 @@ const TaskDetailModal = ({
 	const [assigneeId, setAssigneeId] = useState<number | undefined>();
 	const updateTaskMutation = useUpdateTask(projectKey, task.id);
 	const currentUserId = useUserStore((state) => state.userId);
+	const [dueDate, setDueDate] = useState('');
 
 	const { data: members = [] } = useGetMembers(projectKey);
 
@@ -50,6 +51,7 @@ const TaskDetailModal = ({
 			setDescription(task.description ?? '');
 			setSelectedBranch(task.githubBranch || '');
 			setTempSelectedBranch(task.githubBranch || '');
+			setDueDate(task.dueDate?.split('T')[0] || '');
 
 			if (task.assignee) {
 				const assignedMember = members.find((member: getMemberType) => member.name === task.assignee);
@@ -73,13 +75,16 @@ const TaskDetailModal = ({
 			return;
 		}
 
+		// 선택된 날짜를 ISO 형식으로 변환
+		const formattedDueDate = dueDate ? new Date(dueDate).toISOString() : null;
+
 		const payload: UpdateTaskRequest = {
 			name,
 			description,
 			columnId: task.columnId,
 			assigneeId,
 			priority: task.priority,
-			// 브랜치 연동 버튼을 누른 경우, 해당 브랜치로 업데이트
+			dueDate: formattedDueDate,
 			githubBranch: branchToUpdate || selectedBranch,
 		};
 
@@ -195,6 +200,21 @@ const TaskDetailModal = ({
 							</CurrentBranch>
 						)}
 					</GithubSection>
+
+					<DateSection>
+						<DateInfo>
+							<DateLabel>생성일</DateLabel>
+							<DateValue>{task ? new Date(task.createdAt).toLocaleString() : ''}</DateValue>
+						</DateInfo>
+						<DateInfo>
+							<DateLabel>수정일</DateLabel>
+							<DateValue>{task?.updatedAt ? new Date(task.updatedAt).toLocaleString() : 'N/A'}</DateValue>
+						</DateInfo>
+						<DateInfo>
+							<DateLabel>마감일</DateLabel>
+							<Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+						</DateInfo>
+					</DateSection>
 
 					{/* --- 커밋 리스트 --- */}
 					{selectedBranch && (
@@ -530,4 +550,32 @@ const Label = styled.label`
 const AssigneeSelect = styled.select`
 	${({ theme }) => inputBaseStyles(theme)}
 	margin-bottom: 1rem;
+`;
+
+const DateSection = styled.div`
+	margin-top: 1rem;
+	padding: 1.2rem;
+	background: ${({ theme }) => theme.ui.background};
+	border-radius: 8px;
+	border: 1px solid ${({ theme }) => theme.ui.border};
+	display: flex;
+	flex-direction: column;
+	gap: 1.2rem;
+`;
+
+const DateInfo = styled.div`
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+`;
+
+const DateLabel = styled.span`
+	font-size: 1.4rem;
+	font-weight: 500;
+	color: ${({ theme }) => theme.text.secondary};
+`;
+
+const DateValue = styled.span`
+	font-size: 1.4rem;
+	color: ${({ theme }) => theme.text.primary};
 `;

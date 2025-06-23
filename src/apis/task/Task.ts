@@ -4,7 +4,7 @@ export type CreateTaskRequest = {
 	columnId: number;
 	assigneeId: number;
 	priority: 'HIGH' | 'MEDIUM' | 'LOW';
-	dueDate?: string;
+	dueDate?: string | null;
 	tags?: string[];
 	githubBranch?: string;
 };

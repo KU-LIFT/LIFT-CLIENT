@@ -20,8 +20,11 @@ function Task({ task, onTaskClick }: TaskProps) {
 		}
 	};
 
+	const isOverdue = !!(task.dueDate && new Date(task.dueDate) < new Date());
+
 	return (
 		<TaskCard
+			isOverdue={isOverdue}
 			onClick={(e: React.MouseEvent<HTMLDivElement>) => {
 				e.stopPropagation();
 				onTaskClick?.(task);
@@ -56,11 +59,11 @@ const DeleteButtonWrapper = styled.div`
 	transition: opacity 0.2s ease-in-out;
 `;
 
-const TaskCard = styled.div`
+const TaskCard = styled.div<{ isOverdue: boolean }>`
 	width: 100%;
 	padding: 1.2rem 1.6rem;
 	background-color: ${({ theme }) => theme.ui.panel};
-	border: 1px solid ${({ theme }) => theme.ui.border};
+	border: 1px solid ${({ theme, isOverdue }) => (isOverdue ? theme.color.Red[600] : theme.ui.border)};
 	border-radius: 6px;
 	box-shadow: 0 1px 2px ${({ theme }) => theme.ui.shadow};
 	cursor: pointer;

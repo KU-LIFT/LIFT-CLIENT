@@ -28,6 +28,7 @@ const AddTaskModal = ({
 	const [name, setName] = useState('');
 	const [description, setDescription] = useState('');
 	const [assigneeId, setAssigneeId] = useState<number | undefined>(undefined);
+	const [dueDate, setDueDate] = useState('');
 
 	useEffect(() => {
 		if (currentUserId) {
@@ -44,6 +45,10 @@ const AddTaskModal = ({
 			alert('담당자를 지정해주세요.');
 			return;
 		}
+
+		// 선택된 날짜를 ISO 형식으로 변환 (시간은 UTC 00:00:00으로 설정)
+		const formattedDueDate = dueDate ? new Date(dueDate).toISOString() : null;
+
 		createTaskMutation.mutate(
 			{
 				name,
@@ -51,7 +56,7 @@ const AddTaskModal = ({
 				columnId,
 				assigneeId,
 				priority: 'HIGH', // 임의값
-				dueDate: new Date().toISOString(),
+				dueDate: formattedDueDate,
 				tags: [],
 			},
 			{
@@ -59,6 +64,7 @@ const AddTaskModal = ({
 					onClose();
 					setName('');
 					setDescription('');
+					setDueDate('');
 				},
 			}
 		);
@@ -87,8 +93,12 @@ const AddTaskModal = ({
 						rows={5}
 					/>
 					<div>
+						<Label>마감일</Label>
+						<Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+					</div>
+					<div>
 						<Label>담당자</Label>
-						<AssigneeSelect value={assigneeId} onChange={(e) => setAssigneeId(Number(e.target.value))}>
+						<AssigneeSelect value={assigneeId || ''} onChange={(e) => setAssigneeId(Number(e.target.value))}>
 							<option value="">담당자 선택</option>
 							{members.map((member: any) => (
 								<option key={member.id} value={member.id}>

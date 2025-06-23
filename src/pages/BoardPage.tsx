@@ -17,7 +17,7 @@ import AIChatModal from '@/components/AIChatModal';
 import useProjectKeyStore from '@/stores/useProjectKeyStore';
 import { useBoards } from '@/apis/board/query';
 import { BoardType } from '@/types/Board';
-import { useGetTasks, useGetTask } from '@/apis/task/query';
+import { useGetTasks } from '@/apis/task/query';
 import AddTaskModal from '@/components/AddTaskModal';
 import { TaskType } from '@/types/TaskType';
 import { useMoveTask } from '@/apis/task/moveTask/query';
@@ -49,7 +49,6 @@ function BoardPage() {
 	// task edit 모달
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
-	const { refetch: refetchTask } = useGetTask(projectKey, selectedTask?.id ?? 0);
 
 	const handleTaskClick = (task: TaskType) => {
 		setSelectedTask(task);
@@ -99,13 +98,6 @@ function BoardPage() {
 		moveTaskMutation.mutate({ taskId, columnId: newColumnId });
 		// 3) overlay 제거
 		setActiveTask(null);
-	};
-
-	const handleBranchLinked = async () => {
-		if (selectedTask) {
-			const { data } = await refetchTask();
-			if (data) setSelectedTask(data);
-		}
 	};
 
 	if (isLoading) return <div>로딩 중...</div>;

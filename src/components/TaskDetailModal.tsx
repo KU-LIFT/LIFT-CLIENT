@@ -4,7 +4,6 @@ import { useUpdateTask } from '@/apis/task/query';
 import useProjectKeyStore from '@/stores/useProjectKeyStore';
 import { TaskType } from '@/types/TaskType';
 import { UpdateTaskRequest } from '@/apis/task/Task';
-import useUserStore from '@/stores/useUserStore';
 import Button from './common/Button';
 import IconButton from './common/IconButton';
 import { useBranches, useCreateBranch, useCommits, usePullRequests } from '@/apis/git/query';
@@ -30,7 +29,6 @@ const TaskDetailModal = ({
 	const [description, setDescription] = useState('');
 	const [assigneeId, setAssigneeId] = useState<number | undefined>();
 	const updateTaskMutation = useUpdateTask(projectKey, task.id);
-	const currentUserId = useUserStore((state) => state.userId);
 	const [dueDate, setDueDate] = useState('');
 
 	const { data: members = [] } = useGetMembers(projectKey);

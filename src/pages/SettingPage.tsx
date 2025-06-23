@@ -1,20 +1,77 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import Icon from '@/components/common/Icon';
+import { useUpdatePassword, useDeleteUser, useMyInfo } from '@/apis/users/query';
+import { useNavigate } from 'react-router-dom';
 
 type SettingMenu = 'account' | 'notifications';
 
 const SettingPage = () => {
 	const [activeMenu, setActiveMenu] = useState<SettingMenu>('account');
+	const navigate = useNavigate();
 
-	// 알림 설정 상태
+	// --- API Hooks ---
+	const { data: me } = useMyInfo();
+	const updatePasswordMutation = useUpdatePassword();
+	const deleteUserMutation = useDeleteUser();
+
+	// --- 비밀번호 변경 ---
+	const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
+	const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setPasswords({ ...passwords, [e.target.name]: e.target.value });
+	};
+	const handleUpdatePassword = () => {
+		if (passwords.new !== passwords.confirm) {
+			alert('새 비밀번호가 일치하지 않습니다.');
+			return;
+		}
+		updatePasswordMutation.mutate(
+			{ password: passwords.new },
+			{
+				onSuccess: () => {
+					alert('비밀번호가 변경되었습니다.');
+					setPasswords({ current: '', new: '', confirm: '' });
+				},
+				onError: (err: any) => {
+					alert(err?.response?.data?.message || '비밀번호 변경에 실패했습니다.');
+				},
+			}
+		);
+	};
+
+	// --- 회원 탈퇴 ---
+	const handleDeleteUser = () => {
+		if (!me) return;
+		if (window.confirm('정말 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+			deleteUserMutation.mutate(me.id, {
+				onSuccess: () => {
+					alert('회원 탈퇴가 완료되었습니다.');
+					localStorage.clear();
+					navigate('/login');
+				},
+				onError: (err: any) => {
+					alert(err?.response?.data?.message || '회원 탈퇴에 실패했습니다.');
+				},
+			});
+		}
+	};
+
+	// --- 알림 설정 ---
 	const [notificationEmail, setNotificationEmail] = useState('');
-	const [registeredEmail, setRegisteredEmail] = useState(''); // 등록된 이메일
+	const [registeredEmail, setRegisteredEmail] = useState('');
 	const [notifications, setNotifications] = useState({
 		roleChange: false,
 		taskAssignment: false,
 		projectInvitation: false,
 	});
+
+	// 현재 로그인한 유저의 이메일을 알림 이메일 기본값으로 설정
+	useEffect(() => {
+		if (me?.email) {
+			setNotificationEmail(me.email);
+			setRegisteredEmail(me.email);
+		}
+	}, [me]);
 
 	const handleNotificationChange = (key: keyof typeof notifications) => {
 		setNotifications((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -27,7 +84,7 @@ const SettingPage = () => {
 			return;
 		}
 		setRegisteredEmail(notificationEmail);
-		alert(`'${notificationEmail}' (으)로 알림 이메일이 등록되었습니다.`);
+		alert(`'${notificationEmail}' (으)로 알림 이메일이 등록되었습니다. (API 미연동)`);
 	};
 
 	return (
@@ -56,12 +113,28 @@ const SettingPage = () => {
 								<CardDescription>보안을 위해 주기적으로 비밀번호를 변경해주세요.</CardDescription>
 							</CardHeader>
 							<CardContent>
-								<Input type="password" placeholder="현재 비밀번호" />
-								<Input type="password" placeholder="새 비밀번호" />
-								<Input type="password" placeholder="새 비밀번호 확인" />
+								<Input
+									name="new"
+									type="password"
+									placeholder="새 비밀번호"
+									value={passwords.new}
+									onChange={handlePasswordChange}
+								/>
+								<Input
+									name="confirm"
+									type="password"
+									placeholder="새 비밀번호 확인"
+									value={passwords.confirm}
+									onChange={handlePasswordChange}
+								/>
 							</CardContent>
 							<CardFooter>
-								<Button>비밀번호 변경</Button>
+								<Button
+									onClick={handleUpdatePassword}
+									disabled={updatePasswordMutation.isPending || !passwords.new || !passwords.confirm}
+								>
+									{updatePasswordMutation.isPending ? '변경 중...' : '비밀번호 변경'}
+								</Button>
 							</CardFooter>
 						</SettingCard>
 
@@ -71,7 +144,9 @@ const SettingPage = () => {
 								<CardDescription>계정을 삭제하면 모든 데이터가 영구적으로 삭제됩니다.</CardDescription>
 							</CardHeader>
 							<CardFooter>
-								<Button danger>회원 탈퇴</Button>
+								<Button onClick={handleDeleteUser} danger disabled={deleteUserMutation.isPending}>
+									{deleteUserMutation.isPending ? '처리 중...' : '회원 탈퇴'}
+								</Button>
 							</CardFooter>
 						</SettingCard>
 					</Section>

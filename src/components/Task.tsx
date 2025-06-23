@@ -27,10 +27,13 @@ function Task({ task, onTaskClick }: TaskProps) {
 				onTaskClick?.(task);
 			}}
 		>
-			<div>
-				<TaskTitle>{task.name}</TaskTitle>
-				<TaskDescription>{task.description}</TaskDescription>
-			</div>
+			<ContentWrapper>
+				<div>
+					<TaskTitle>{task.name}</TaskTitle>
+					<TaskDescription>{task.description}</TaskDescription>
+				</div>
+				{task.assignee && <AssigneeName>{task.assignee}</AssigneeName>}
+			</ContentWrapper>
 			<DeleteButtonWrapper className="delete-button-wrapper">
 				<IconButton type="normal" size="small" iconName="IcnDelete" onClick={handleDeleteClick} />
 			</DeleteButtonWrapper>
@@ -39,6 +42,14 @@ function Task({ task, onTaskClick }: TaskProps) {
 }
 
 export default Task;
+
+const ContentWrapper = styled.div`
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	flex: 1;
+	gap: 1rem;
+`;
 
 const DeleteButtonWrapper = styled.div`
 	opacity: 0;
@@ -79,6 +90,17 @@ const TaskTitle = styled.h3`
 	overflow: hidden;
 	text-overflow: ellipsis;
 	line-height: 1.5;
+`;
+
+const AssigneeName = styled.p`
+	font-size: 1.2rem;
+	font-weight: 500;
+	color: ${({ theme }) => theme.text.primary};
+	background-color: ${({ theme }) => theme.ui.background};
+	border: 1px solid ${({ theme }) => theme.ui.border};
+	border-radius: 4px;
+	padding: 0.4rem 0.8rem;
+	align-self: flex-start;
 `;
 
 const TaskDescription = styled.p`

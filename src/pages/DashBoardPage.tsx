@@ -109,6 +109,7 @@ function DashBoardPage() {
 			<Header>
 				<UserMenu ref={menuRef}>
 					{me && <Button type="secondary" label={me.name} onClick={() => setIsMenuOpen((prev) => !prev)} />}
+					<IconButton type="normal" iconName="IcnSetting" onClick={() => navigate('/setting')} />
 					{isMenuOpen && me && (
 						<DropdownMenu>
 							<UserInfo>

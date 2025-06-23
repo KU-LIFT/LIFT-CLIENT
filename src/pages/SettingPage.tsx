@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import Icon from '@/components/common/Icon';
 import { useUpdatePassword, useDeleteUser, useMyInfo } from '@/apis/users/query';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 
 type SettingMenu = 'account' | 'notifications';
 
 const SettingPage = () => {
 	const [activeMenu, setActiveMenu] = useState<SettingMenu>('account');
-	const navigate = useNavigate();
+	// const navigate = useNavigate();
 
 	// --- API Hooks ---
 	const { data: me } = useMyInfo();
@@ -42,18 +42,19 @@ const SettingPage = () => {
 	// --- 회원 탈퇴 ---
 	const handleDeleteUser = () => {
 		if (!me) return;
-		if (window.confirm('정말 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-			deleteUserMutation.mutate(me.id, {
-				onSuccess: () => {
-					alert('회원 탈퇴가 완료되었습니다.');
-					localStorage.clear();
-					navigate('/login');
-				},
-				onError: (err: any) => {
-					alert(err?.response?.data?.message || '회원 탈퇴에 실패했습니다.');
-				},
-			});
-		}
+		alert('API 미연동');
+		// if (window.confirm('정말 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+		// 	deleteUserMutation.mutate(me.id, {
+		// 		onSuccess: () => {
+		// 			alert('회원 탈퇴가 완료되었습니다.');
+		// 			localStorage.clear();
+		// 			navigate('/login');
+		// 		},
+		// 		onError: (err: any) => {
+		// 			alert(err?.response?.data?.message || '회원 탈퇴에 실패했습니다.');
+		// 		},
+		// 	});
+		// }
 	};
 
 	// --- 알림 설정 ---

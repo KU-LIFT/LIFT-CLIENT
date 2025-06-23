@@ -8,6 +8,7 @@ export const theme = {
 		panel: color.Grey.White,
 		border: color.Grey[300],
 		shadow: 'rgba(0, 0, 0, 0.1)',
+		hover: color.Grey[200],
 	},
 	text: {
 		primary: color.Grey[900],
@@ -22,7 +23,8 @@ export const theme = {
 		primaryActive: colorToken.Primary.heavy,
 		secondary: color.Grey[300],
 		secondaryHover: color.Grey[400],
-		danger: '#dc3545',
+		danger: color.Red[600],
+		dangerHover: color.Red[700],
 	},
 	status: {
 		todo: color.Blue.Blue1,

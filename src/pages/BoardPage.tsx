@@ -10,22 +10,24 @@ import {
 	DragOverlay,
 	DragStartEvent,
 } from '@dnd-kit/core';
+import { useQueryClient } from '@tanstack/react-query';
 
 import Card from '@/components/Task';
 import AIChatModal from '@/components/AIChatModal';
 import useProjectKeyStore from '@/stores/useProjectKeyStore';
 import { useBoards } from '@/apis/board/query';
 import { BoardType } from '@/types/Board';
-import { useGetTasks, useGetTask } from '@/apis/task/query';
-import TaskModal from '@/components/TaskModal';
+import { useGetTasks } from '@/apis/task/query';
+import AddTaskModal from '@/components/AddTaskModal';
 import { TaskType } from '@/types/TaskType';
 import { useMoveTask } from '@/apis/task/moveTask/query';
 import Column from '@/components/Column';
-import EditTaskModal from '@/components/EditTaskModal';
+import TaskDetailModal from '@/components/TaskDetailModal';
 import Button from '@/components/common/Button';
 
 function BoardPage() {
 	const projectKey = useProjectKeyStore((store) => store.projectKey);
+	const queryClient = useQueryClient();
 
 	// AI 모달
 	// BoardPage.tsx
@@ -47,7 +49,6 @@ function BoardPage() {
 	// task edit 모달
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
-	const { refetch: refetchTask } = useGetTask(projectKey, selectedTask?.id ?? 0);
 
 	const handleTaskClick = (task: TaskType) => {
 		setSelectedTask(task);
@@ -99,13 +100,6 @@ function BoardPage() {
 		setActiveTask(null);
 	};
 
-	const handleBranchLinked = async () => {
-		if (selectedTask) {
-			const { data } = await refetchTask();
-			if (data) setSelectedTask(data);
-		}
-	};
-
 	if (isLoading) return <div>로딩 중...</div>;
 	if (isError) return <div>에러 발생</div>;
 	if (!boardsData?.length) return <div>데이터 없음</div>;
@@ -142,18 +136,21 @@ function BoardPage() {
 				</BoardsContainer>
 
 				{aiModalColumnId !== null && <AIChatModal columnId={aiModalColumnId} onClose={handleCloseAIModal} />}
-				<TaskModal
+				<AddTaskModal
 					open={addModal.open}
+					onClose={() => setAddModal({ open: false, columnName: '', columnId: 0 })}
 					columnName={addModal.columnName}
 					columnId={addModal.columnId}
-					onClose={() => setAddModal({ open: false, columnName: '', columnId: 0 })}
 				/>
-				{selectedTask && (
-					<EditTaskModal
+				{isEditModalOpen && selectedTask && (
+					<TaskDetailModal
 						open={isEditModalOpen}
 						task={selectedTask}
 						onClose={() => setIsEditModalOpen(false)}
-						onBranchLinked={handleBranchLinked}
+						onBranchLinked={() => {
+							// 브랜치 연동 성공 시, 보드 데이터 리프레시
+							queryClient.invalidateQueries({ queryKey: ['board', projectKey] });
+						}}
 					/>
 				)}
 			</BoardPageLayout>

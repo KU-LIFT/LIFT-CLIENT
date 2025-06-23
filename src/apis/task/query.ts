@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createTask, deleteTask, getTask, getTasks, updateTask } from './axios';
+import { createTask, deleteTask, getTask, getTasks, updateTask, getAssignedTasks } from './axios';
 import { CreateTaskRequest, UpdateTaskRequest } from './Task';
 
 export const useGetTasks = (projectKey: string) =>
@@ -42,3 +42,9 @@ export const useDeleteTask = (projectKey: string) => {
 		onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tasks', projectKey] }),
 	});
 };
+
+export const useGetAssignedTasks = (limit?: number) =>
+	useQuery({
+		queryKey: ['assignedTasks', limit],
+		queryFn: () => getAssignedTasks(limit),
+	});

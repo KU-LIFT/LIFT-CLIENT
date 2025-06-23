@@ -1,4 +1,3 @@
-// src/apis/git/Git.ts
 export interface BranchInfoDto {
 	/** 브랜치 이름 */
 	name: string;

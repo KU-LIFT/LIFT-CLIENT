@@ -1,4 +1,3 @@
-// src/apis/git/axios.ts
 import instance from '../instance';
 import { BranchInfoDto, CommitDto, GitPullRequestDto, CreatePrRequest } from '@/apis/git/Git';
 

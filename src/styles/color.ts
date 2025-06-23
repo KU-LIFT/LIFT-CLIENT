@@ -21,6 +21,12 @@ const color = {
 		800: '#38366d',
 		900: '#2c2a52',
 	},
+	Red: {
+		// For danger actions
+		100: '#fde8e8',
+		600: '#e53e3e',
+		700: '#c53030',
+	},
 	Grey: {
 		White: '#FFFFFF',
 		Black: '#000000',

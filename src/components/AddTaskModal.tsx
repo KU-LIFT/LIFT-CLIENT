@@ -1,10 +1,12 @@
 // components/AddTaskModal.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCreateTask } from '@/apis/task/query';
 import useProjectKeyStore from '@/stores/useProjectKeyStore';
 import styled from '@emotion/styled';
 import Button from './common/Button';
 import IconButton from './common/IconButton';
+import { useGetMembers } from '@/apis/member/query';
+import useUserStore from '@/stores/useUserStore';
 
 const AddTaskModal = ({
 	open,
@@ -18,14 +20,28 @@ const AddTaskModal = ({
 	columnId: number;
 }) => {
 	const projectKey = useProjectKeyStore((s) => s.projectKey);
+	const currentUserId = useUserStore((s) => s.userId);
 	const createTaskMutation = useCreateTask(projectKey);
+
+	const { data: members = [] } = useGetMembers(projectKey);
 
 	const [name, setName] = useState('');
 	const [description, setDescription] = useState('');
+	const [assigneeId, setAssigneeId] = useState<number | undefined>(undefined);
+
+	useEffect(() => {
+		if (currentUserId) {
+			setAssigneeId(currentUserId);
+		}
+	}, [currentUserId]);
 
 	const handleCreate = () => {
 		if (!name) {
 			alert('태스크 이름은 필수 항목입니다.');
+			return;
+		}
+		if (!assigneeId) {
+			alert('담당자를 지정해주세요.');
 			return;
 		}
 		createTaskMutation.mutate(
@@ -33,7 +49,7 @@ const AddTaskModal = ({
 				name,
 				description,
 				columnId,
-				assigneeId: 1, // 임의값
+				assigneeId,
 				priority: 'HIGH', // 임의값
 				dueDate: new Date().toISOString(),
 				tags: [],
@@ -70,6 +86,17 @@ const AddTaskModal = ({
 						onChange={(e) => setDescription(e.target.value)}
 						rows={5}
 					/>
+					<div>
+						<Label>담당자</Label>
+						<AssigneeSelect value={assigneeId} onChange={(e) => setAssigneeId(Number(e.target.value))}>
+							<option value="">담당자 선택</option>
+							{members.map((member: any) => (
+								<option key={member.id} value={member.id}>
+									{member.name}
+								</option>
+							))}
+						</AssigneeSelect>
+					</div>
 				</ModalContent>
 				<ModalFooter>
 					<Button type="secondary" label="취소" onClick={onClose} />
@@ -169,4 +196,16 @@ const ModalFooter = styled.div`
 	gap: 1rem;
 	padding: 1.6rem 2rem;
 	border-top: 1px solid ${({ theme }) => theme.ui.border};
+`;
+
+const Label = styled.label`
+	display: block;
+	margin-bottom: 0.8rem;
+	font-size: 1.4rem;
+	font-weight: 500;
+	color: ${({ theme }) => theme.text.primary};
+`;
+
+const AssigneeSelect = styled.select`
+	${({ theme }) => inputBaseStyles(theme)}
 `;

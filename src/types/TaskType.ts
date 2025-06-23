@@ -6,6 +6,7 @@ export type TaskType = {
 	createdAt: string;
 
 	description?: string;
+	assignee?: string;
 	assigneeId?: number;
 	dueDate?: string;
 	tags?: string[];

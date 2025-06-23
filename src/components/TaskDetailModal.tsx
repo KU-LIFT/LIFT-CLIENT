@@ -4,14 +4,15 @@ import { useUpdateTask } from '@/apis/task/query';
 import useProjectKeyStore from '@/stores/useProjectKeyStore';
 import { TaskType } from '@/types/TaskType';
 import { UpdateTaskRequest } from '@/apis/task/Task';
-import useUserStore from '@/stores/useUserStore';
 import Button from './common/Button';
 import IconButton from './common/IconButton';
 import { useBranches, useCreateBranch, useCommits, usePullRequests } from '@/apis/git/query';
+import { useGetMembers } from '@/apis/member/query';
 import { css } from '@emotion/react';
 import { useQueryClient } from '@tanstack/react-query';
+import { getMemberType } from '@/apis/member/Member';
 
-const EditTaskModal = ({
+const TaskDetailModal = ({
 	open,
 	task,
 	onClose,
@@ -26,8 +27,11 @@ const EditTaskModal = ({
 	const queryClient = useQueryClient();
 	const [name, setName] = useState('');
 	const [description, setDescription] = useState('');
+	const [assigneeId, setAssigneeId] = useState<number | undefined>();
 	const updateTaskMutation = useUpdateTask(projectKey, task.id);
-	const currentUserId = useUserStore((state) => state.userId);
+	const [dueDate, setDueDate] = useState('');
+
+	const { data: members = [] } = useGetMembers(projectKey);
 
 	// --- Github 연동 관련 ---
 	const { data: branches } = useBranches(projectKey, task.id);
@@ -40,13 +44,23 @@ const EditTaskModal = ({
 	const { data: pullRequests } = usePullRequests(projectKey, task.id);
 
 	useEffect(() => {
-		if (task) {
+		if (task && members.length > 0) {
 			setName(task.name);
 			setDescription(task.description ?? '');
 			setSelectedBranch(task.githubBranch || '');
 			setTempSelectedBranch(task.githubBranch || '');
+			setDueDate(task.dueDate?.split('T')[0] || '');
+
+			if (task.assignee) {
+				const assignedMember = members.find((member: getMemberType) => member.name === task.assignee);
+				if (assignedMember) {
+					setAssigneeId(assignedMember.id);
+				}
+			} else {
+				setAssigneeId(undefined);
+			}
 		}
-	}, [task]);
+	}, [task, members]);
 
 	// 태스크의 이름, 설명, 브랜치 등 모든 정보를 업데이트하는 함수
 	const handleUpdate = (branchToUpdate?: string) => {
@@ -54,14 +68,21 @@ const EditTaskModal = ({
 			alert('태스크 이름은 필수 항목입니다.');
 			return;
 		}
+		if (!assigneeId) {
+			alert('담당자를 지정해주세요.');
+			return;
+		}
+
+		// 선택된 날짜를 ISO 형식으로 변환
+		const formattedDueDate = dueDate ? new Date(dueDate).toISOString() : null;
 
 		const payload: UpdateTaskRequest = {
 			name,
 			description,
 			columnId: task.columnId,
-			assigneeId: task.assigneeId || currentUserId!,
+			assigneeId,
 			priority: task.priority,
-			// 브랜치 연동 버튼을 누른 경우, 해당 브랜치로 업데이트
+			dueDate: formattedDueDate,
 			githubBranch: branchToUpdate || selectedBranch,
 		};
 
@@ -109,7 +130,7 @@ const EditTaskModal = ({
 		>
 			<ModalContainer>
 				<ModalHeader>
-					<Title>태스크 수정</Title>
+					<Title>태스크 상세조회</Title>
 					<IconButton type="normal" iconName="IcnX" onClick={onClose} />
 				</ModalHeader>
 				<ModalContent>
@@ -120,6 +141,17 @@ const EditTaskModal = ({
 						placeholder="태스크에 대한 간단한 설명을 입력하세요."
 						rows={5}
 					/>
+					<div>
+						<Label>담당자</Label>
+						<AssigneeSelect value={assigneeId} onChange={(e) => setAssigneeId(Number(e.target.value))}>
+							<option value="">담당자 선택</option>
+							{members.map((member: any) => (
+								<option key={member.id} value={member.id}>
+									{member.name}
+								</option>
+							))}
+						</AssigneeSelect>
+					</div>
 
 					{/* --- 깃 브랜치 연동 UI --- */}
 					<GithubSection>
@@ -166,6 +198,21 @@ const EditTaskModal = ({
 							</CurrentBranch>
 						)}
 					</GithubSection>
+
+					<DateSection>
+						<DateInfo>
+							<DateLabel>생성일</DateLabel>
+							<DateValue>{task ? new Date(task.createdAt).toLocaleString() : ''}</DateValue>
+						</DateInfo>
+						<DateInfo>
+							<DateLabel>수정일</DateLabel>
+							<DateValue>{task?.updatedAt ? new Date(task.updatedAt).toLocaleString() : 'N/A'}</DateValue>
+						</DateInfo>
+						<DateInfo>
+							<DateLabel>마감일</DateLabel>
+							<Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+						</DateInfo>
+					</DateSection>
 
 					{/* --- 커밋 리스트 --- */}
 					{selectedBranch && (
@@ -227,7 +274,7 @@ const EditTaskModal = ({
 	);
 };
 
-export default EditTaskModal;
+export default TaskDetailModal;
 
 const BackDrop = styled.div`
 	position: fixed;
@@ -488,4 +535,45 @@ const PrItem = styled.li`
 		font-size: 1.2rem;
 		text-decoration: underline;
 	}
+`;
+
+const Label = styled.label`
+	display: block;
+	margin-bottom: 0.8rem;
+	font-size: 1.4rem;
+	font-weight: 500;
+	color: ${({ theme }) => theme.text.primary};
+`;
+
+const AssigneeSelect = styled.select`
+	${({ theme }) => inputBaseStyles(theme)}
+	margin-bottom: 1rem;
+`;
+
+const DateSection = styled.div`
+	margin-top: 1rem;
+	padding: 1.2rem;
+	background: ${({ theme }) => theme.ui.background};
+	border-radius: 8px;
+	border: 1px solid ${({ theme }) => theme.ui.border};
+	display: flex;
+	flex-direction: column;
+	gap: 1.2rem;
+`;
+
+const DateInfo = styled.div`
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+`;
+
+const DateLabel = styled.span`
+	font-size: 1.4rem;
+	font-weight: 500;
+	color: ${({ theme }) => theme.text.secondary};
+`;
+
+const DateValue = styled.span`
+	font-size: 1.4rem;
+	color: ${({ theme }) => theme.text.primary};
 `;

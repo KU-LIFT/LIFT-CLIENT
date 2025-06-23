@@ -33,3 +33,9 @@ export const moveTask = async (projectKey: string, taskId: number, body: MoveTas
 export const deleteTask = async (projectKey: string, taskId: number): Promise<void> => {
 	await instance.delete(`/projects/${projectKey}/tasks/${taskId}`);
 };
+
+export const getAssignedTasks = async (limit?: number): Promise<TaskType[]> => {
+	const params = limit ? { limit } : {};
+	const { data } = await instance.get(`/tasks/assigned`, { params });
+	return data;
+};

@@ -1,12 +1,14 @@
 // components/AddTaskModal.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCreateTask } from '@/apis/task/query';
 import useProjectKeyStore from '@/stores/useProjectKeyStore';
 import styled from '@emotion/styled';
 import Button from './common/Button';
 import IconButton from './common/IconButton';
+import { useGetMembers } from '@/apis/member/query';
+import useUserStore from '@/stores/useUserStore';
 
-const TaskModal = ({
+const AddTaskModal = ({
 	open,
 	onClose,
 	columnName,
@@ -18,24 +20,43 @@ const TaskModal = ({
 	columnId: number;
 }) => {
 	const projectKey = useProjectKeyStore((s) => s.projectKey);
+	const currentUserId = useUserStore((s) => s.userId);
 	const createTaskMutation = useCreateTask(projectKey);
+
+	const { data: members = [] } = useGetMembers(projectKey);
 
 	const [name, setName] = useState('');
 	const [description, setDescription] = useState('');
+	const [assigneeId, setAssigneeId] = useState<number | undefined>(undefined);
+	const [dueDate, setDueDate] = useState('');
+
+	useEffect(() => {
+		if (currentUserId) {
+			setAssigneeId(currentUserId);
+		}
+	}, [currentUserId]);
 
 	const handleCreate = () => {
 		if (!name) {
 			alert('태스크 이름은 필수 항목입니다.');
 			return;
 		}
+		if (!assigneeId) {
+			alert('담당자를 지정해주세요.');
+			return;
+		}
+
+		// 선택된 날짜를 ISO 형식으로 변환 (시간은 UTC 00:00:00으로 설정)
+		const formattedDueDate = dueDate ? new Date(dueDate).toISOString() : null;
+
 		createTaskMutation.mutate(
 			{
 				name,
 				description,
 				columnId,
-				assigneeId: 1, // 임의값
+				assigneeId,
 				priority: 'HIGH', // 임의값
-				dueDate: new Date().toISOString(),
+				dueDate: formattedDueDate,
 				tags: [],
 			},
 			{
@@ -43,6 +64,7 @@ const TaskModal = ({
 					onClose();
 					setName('');
 					setDescription('');
+					setDueDate('');
 				},
 			}
 		);
@@ -70,6 +92,21 @@ const TaskModal = ({
 						onChange={(e) => setDescription(e.target.value)}
 						rows={5}
 					/>
+					<div>
+						<Label>마감일</Label>
+						<Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+					</div>
+					<div>
+						<Label>담당자</Label>
+						<AssigneeSelect value={assigneeId || ''} onChange={(e) => setAssigneeId(Number(e.target.value))}>
+							<option value="">담당자 선택</option>
+							{members.map((member: any) => (
+								<option key={member.id} value={member.id}>
+									{member.name}
+								</option>
+							))}
+						</AssigneeSelect>
+					</div>
 				</ModalContent>
 				<ModalFooter>
 					<Button type="secondary" label="취소" onClick={onClose} />
@@ -80,7 +117,7 @@ const TaskModal = ({
 	);
 };
 
-export default TaskModal;
+export default AddTaskModal;
 
 // ProjectDetailModal과 동일한 스타일을 많이 공유하므로,
 // 공통 모달 컴포넌트나 스타일을 만드는 것을 고려해볼 수 있습니다.
@@ -169,4 +206,16 @@ const ModalFooter = styled.div`
 	gap: 1rem;
 	padding: 1.6rem 2rem;
 	border-top: 1px solid ${({ theme }) => theme.ui.border};
+`;
+
+const Label = styled.label`
+	display: block;
+	margin-bottom: 0.8rem;
+	font-size: 1.4rem;
+	font-weight: 500;
+	color: ${({ theme }) => theme.text.primary};
+`;
+
+const AssigneeSelect = styled.select`
+	${({ theme }) => inputBaseStyles(theme)}
 `;

@@ -87,7 +87,7 @@ const MemberModal = ({ open, onClose }: Props) => {
 									</MemberInfo>
 									<MemberActions>
 										<Select value={member.role} onChange={(e) => handleUpdateRole(member.id, e.target.value)}>
-											<option value="ADMIN">ADMIN</option>
+											<option value="OWNER">OWNER</option>
 											<option value="MEMBER">MEMBER</option>
 										</Select>
 										<Button type="secondary" size="small" label="추방" onClick={() => handleDelete(member.id)} />

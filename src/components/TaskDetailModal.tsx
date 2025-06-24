@@ -6,7 +6,7 @@ import { TaskType } from '@/types/TaskType';
 import { UpdateTaskRequest } from '@/apis/task/Task';
 import Button from './common/Button';
 import IconButton from './common/IconButton';
-import { useBranches, useCreateBranch, useCommits, usePullRequests } from '@/apis/git/query';
+import { useProjectBranches, useCreateBranch, useCommits, usePullRequests } from '@/apis/git/query';
 import { useGetMembers } from '@/apis/member/query';
 import { css } from '@emotion/react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -34,7 +34,7 @@ const TaskDetailModal = ({
 	const { data: members = [] } = useGetMembers(projectKey);
 
 	// --- Github 연동 관련 ---
-	const { data: branches } = useBranches(projectKey, task.id);
+	const { data: branches, isLoading: isBranchesLoading, isError: isBranchesError } = useProjectBranches(projectKey);
 	const createBranchMutation = useCreateBranch(projectKey, task.id);
 	const [newBranch, setNewBranch] = useState('');
 	const [baseBranch, setBaseBranch] = useState('');
@@ -157,13 +157,23 @@ const TaskDetailModal = ({
 					<GithubSection>
 						<GithubSectionTitle>깃 브랜치 연동</GithubSectionTitle>
 						<BranchRow>
-							<BranchSelect value={tempSelectedBranch} onChange={(e) => setTempSelectedBranch(e.target.value)}>
-								<option value="">브랜치 선택</option>
-								{branches?.map((b) => (
-									<option key={b.name} value={b.name}>
-										{b.name}
-									</option>
-								))}
+							<BranchSelect
+								value={tempSelectedBranch}
+								onChange={(e) => setTempSelectedBranch(e.target.value)}
+								disabled={isBranchesLoading}
+							>
+								{isBranchesLoading && <option>브랜치 목록 로딩 중...</option>}
+								{isBranchesError && <option>브랜치를 불러올 수 없습니다.</option>}
+								{!isBranchesLoading && !isBranchesError && (
+									<>
+										<option value="">브랜치 선택</option>
+										{branches?.map((b) => (
+											<option key={b.name} value={b.name}>
+												{b.name}
+											</option>
+										))}
+									</>
+								)}
 							</BranchSelect>
 							<Button
 								type="primary"

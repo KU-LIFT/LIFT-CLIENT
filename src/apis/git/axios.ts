@@ -17,6 +17,11 @@ export const listBranches = async (projectKey: string, taskId: number): Promise<
 	return data;
 };
 
+export const listProjectBranches = async (projectKey: string): Promise<BranchInfoDto[]> => {
+	const { data } = await instance.get<BranchInfoDto[]>(`/projects/${projectKey}/git/branches`);
+	return data;
+};
+
 export const listCommits = async (projectKey: string, taskId: number): Promise<CommitDto[]> => {
 	const { data } = await instance.get<CommitDto[]>(`/projects/${projectKey}/tasks/${taskId}/git/commits`);
 	return data;

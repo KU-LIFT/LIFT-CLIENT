@@ -21,7 +21,7 @@ function MainLayout() {
 
 	const menuItems = [
 		{ path: '/', icon: 'IcnDashboard', label: 'Dashboard' },
-		{ path: '/board', icon: 'IcnTodolist', label: 'Board' },
+		{ path: '/boards', icon: 'IcnTodolist', label: 'Board' },
 		{ path: '/user', icon: 'IcnPlus', label: 'UserPage' },
 		{ path: '/setting', icon: 'IcnSetting', label: 'Settings' },
 	];

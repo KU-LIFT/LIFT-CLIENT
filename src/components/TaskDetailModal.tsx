@@ -116,6 +116,7 @@ const TaskDetailModal = ({
 				},
 				onError: (err: any) => {
 					alert(err?.response?.data?.message || '브랜치 생성 실패');
+					console.log(tempSelectedBranch);
 				},
 			}
 		);

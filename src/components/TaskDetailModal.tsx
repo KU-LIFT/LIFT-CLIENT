@@ -109,8 +109,10 @@ const TaskDetailModal = ({
 				onSuccess: () => {
 					setSelectedBranch(branchName);
 					setTempSelectedBranch(branchName);
-					alert('브랜치가 생성 및 연동되었습니다!');
+					queryClient.invalidateQueries({ queryKey: ['task', projectKey, task.id] });
+					queryClient.invalidateQueries({ queryKey: ['gitCommits', projectKey, task.id] });
 					onBranchLinked?.();
+					alert('브랜치가 생성 및 연동되었습니다!');
 				},
 				onError: (err: any) => {
 					alert(err?.response?.data?.message || '브랜치 생성 실패');
@@ -155,18 +157,19 @@ const TaskDetailModal = ({
 
 					{/* --- 깃 브랜치 연동 UI --- */}
 					<GithubSection>
-						<GithubSectionTitle>깃 브랜치 연동</GithubSectionTitle>
+						<GithubSectionTitle>깃 브랜치 생성 및 연동</GithubSectionTitle>
 						<BranchRow>
+							<InputSmall value={newBranch} onChange={(e) => setNewBranch(e.target.value)} placeholder="새 브랜치명" />
 							<BranchSelect
-								value={tempSelectedBranch}
-								onChange={(e) => setTempSelectedBranch(e.target.value)}
+								value={baseBranch}
+								onChange={(e) => setBaseBranch(e.target.value)}
 								disabled={isBranchesLoading}
 							>
 								{isBranchesLoading && <option>브랜치 목록 로딩 중...</option>}
 								{isBranchesError && <option>브랜치를 불러올 수 없습니다.</option>}
 								{!isBranchesLoading && !isBranchesError && (
 									<>
-										<option value="">브랜치 선택</option>
+										<option value="">기준 브랜치(선택)</option>
 										{branches?.map((b) => (
 											<option key={b.name} value={b.name}>
 												{b.name}
@@ -177,27 +180,10 @@ const TaskDetailModal = ({
 							</BranchSelect>
 							<Button
 								type="primary"
-								label="연동"
-								onClick={() => handleUpdate(tempSelectedBranch)}
-								additionalCss={css`
-									min-width: 80px;
-								`}
-								disabled={!tempSelectedBranch || tempSelectedBranch === selectedBranch}
-							/>
-						</BranchRow>
-						<BranchRow>
-							<InputSmall value={newBranch} onChange={(e) => setNewBranch(e.target.value)} placeholder="새 브랜치명" />
-							<InputSmall
-								value={baseBranch}
-								onChange={(e) => setBaseBranch(e.target.value)}
-								placeholder="기준 브랜치(선택)"
-							/>
-							<Button
-								type="primary"
 								label="생성+연동"
 								onClick={() => handleCreateAndLinkBranch(newBranch, baseBranch)}
 								additionalCss={css`
-									min-width: 120px;
+									min-width: 100px;
 								`}
 								disabled={!newBranch}
 							/>
@@ -301,13 +287,15 @@ const BackDrop = styled.div`
 
 const ModalContainer = styled.div`
 	width: 500px;
-	min-height: 80vh;
+	min-height: 70vh;
 	max-height: 90vh;
 	background-color: ${({ theme }) => theme.ui.panel};
 	border-radius: 8px;
 	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 	display: flex;
 	flex-direction: column;
+
+	overflow-y: auto;
 `;
 
 const ModalHeader = styled.div`
@@ -425,7 +413,8 @@ const InputSmall = styled.input`
 `;
 const CurrentBranch = styled.div`
 	margin-top: 0.5rem;
-	font-size: 1.2rem;
+	font-size: 1.6rem;
+	font-weight: 600;
 	color: ${({ theme }) => theme.text.secondary};
 `;
 const CommitSection = styled.div`

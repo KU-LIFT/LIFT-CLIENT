@@ -16,8 +16,9 @@ function Router() {
 				<Route path="/oauth/success" element={<OAuthSuccessPage />} />
 
 				<Route element={<PrivateRoute />}>
+					<Route path="/" element={<DashBoardPage />} />
+
 					<Route element={<MainLayout />}>
-						<Route path="/" element={<DashBoardPage />} />
 						<Route path="/board" element={<BoardPage />} />
 						<Route path="/user" element={<UserListPage />} />
 						<Route path="/setting" element={<SettingPage />} />

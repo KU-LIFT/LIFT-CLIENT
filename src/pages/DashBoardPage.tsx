@@ -27,6 +27,7 @@ function DashBoardPage() {
 
 	// GitHub 앱 설치 링크를 클릭했을 때
 	const handleInstallClick = (projectKey: string) => {
+		useProjectKeyStore.getState().setProjectKey(projectKey);
 		window.open(`https://github.com/apps/kulift/installations/new?state=${projectKey}`, '_blank');
 	};
 
@@ -153,7 +154,7 @@ function DashBoardPage() {
 									<CardHeader
 										onClick={() => {
 											useProjectKeyStore.getState().setProjectKey(project.projectKey);
-											navigate('/board');
+											navigate('/boards');
 										}}
 									>
 										<ProjectIntoTitle>{project.name}</ProjectIntoTitle>

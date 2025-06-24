@@ -568,6 +568,7 @@ const DateInfo = styled.div`
 `;
 
 const DateLabel = styled.span`
+	word-break: keep-all;
 	font-size: 1.4rem;
 	font-weight: 500;
 	color: ${({ theme }) => theme.text.secondary};

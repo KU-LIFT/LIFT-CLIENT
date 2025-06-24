@@ -19,7 +19,7 @@ function Router() {
 					<Route path="/" element={<DashBoardPage />} />
 
 					<Route element={<MainLayout />}>
-						<Route path="/board" element={<BoardPage />} />
+						<Route path="/boards" element={<BoardPage />} />
 						<Route path="/user" element={<UserListPage />} />
 						<Route path="/setting" element={<SettingPage />} />
 					</Route>

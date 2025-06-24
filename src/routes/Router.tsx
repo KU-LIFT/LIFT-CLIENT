@@ -6,14 +6,14 @@ import DashBoardPage from '../pages/DashBoardPage';
 import BoardPage from '../pages/BoardPage';
 import UserListPage from '../pages/UserListPage';
 import SettingPage from '../pages/SettingPage';
-import OAuthSuccessPage from '@/pages/OAuthSuccessPage';
+import OAuthSuccessPage from '../pages/OAuthSuccessPage';
 
 function Router() {
 	return (
 		<BrowserRouter>
 			<Routes>
 				<Route path="/login" element={<LoginPage />} />
-				<Route path="/oauth/success" element={<OAuthSuccessPage />} />
+				<Route path="/oauth-success" element={<OAuthSuccessPage />} />
 
 				<Route element={<PrivateRoute />}>
 					<Route path="/" element={<DashBoardPage />} />

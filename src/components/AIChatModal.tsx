@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import styled from '@emotion/styled';
 import { TaskType } from '@/types/TaskType';
-import { useImportTodosFromText } from '@/apis/ai/query';
+import { useImportTodosFromText, useImportTodosFromFile } from '@/apis/ai/query';
 import useProjectKeyStore from '@/stores/useProjectKeyStore';
 import Task from './Task';
 import Button from './common/Button';
@@ -16,8 +16,14 @@ const AIChatModal = ({ columnId, onClose }: AIChatModalProps) => {
 	const [input, setInput] = useState('');
 	const [tasks, setTasks] = useState<TaskType[]>([]);
 	const projectKey = useProjectKeyStore((store) => store.projectKey);
+	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	const { mutate, isPending, error } = useImportTodosFromText(projectKey, columnId);
+	const {
+		mutate: importFromFile,
+		isPending: isImporting,
+		error: importError,
+	} = useImportTodosFromFile(projectKey, columnId);
 
 	const handleGenerateIssues = () => {
 		if (!input.trim()) return;
@@ -29,6 +35,24 @@ const AIChatModal = ({ columnId, onClose }: AIChatModalProps) => {
 				},
 			}
 		);
+	};
+
+	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const file = event.target.files?.[0];
+		if (file) {
+			importFromFile(
+				{ file },
+				{
+					onSuccess: (data) => {
+						setTasks(data);
+					},
+				}
+			);
+		}
+	};
+
+	const handleFileUploadClick = () => {
+		fileInputRef.current?.click();
 	};
 
 	return (
@@ -46,13 +70,19 @@ const AIChatModal = ({ columnId, onClose }: AIChatModalProps) => {
 							value={input}
 							onChange={(e) => setInput(e.target.value)}
 						/>
-						<Button
-							type="primary"
-							onClick={handleGenerateIssues}
-							disabled={isPending}
-							label={isPending ? '생성 중...' : '자동 생성'}
-						/>
-						{error && <ErrorText>오류: 태스크 생성에 실패했습니다. 다시 시도해주세요.</ErrorText>}
+						<ButtonContainer>
+							<Button
+								type="primary"
+								onClick={handleGenerateIssues}
+								disabled={isPending || isImporting}
+								label={isPending ? '생성 중...' : '자동 생성'}
+							/>
+							<FileUploadButton onClick={handleFileUploadClick} disabled={isPending || isImporting}>
+								파일 업로드
+							</FileUploadButton>
+							<input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
+						</ButtonContainer>
+						{(error || importError) && <ErrorText>오류: 태스크 생성에 실패했습니다. 다시 시도해주세요.</ErrorText>}
 					</LeftPanel>
 					<RightPanel>
 						<SubTitle>2. 생성된 태스크 확인</SubTitle>
@@ -61,7 +91,9 @@ const AIChatModal = ({ columnId, onClose }: AIChatModalProps) => {
 								tasks.map((task) => <Task key={task.id} task={task} />)
 							) : (
 								<Placeholder>
-									{isPending ? 'AI가 태스크를 생성하고 있습니다...' : '이곳에 생성된 태스크가 표시됩니다.'}
+									{isPending || isImporting
+										? 'AI가 태스크를 생성하고 있습니다...'
+										: '이곳에 생성된 태스크가 표시됩니다.'}
 								</Placeholder>
 							)}
 						</IssueList>
@@ -100,6 +132,7 @@ const ModalContainer = styled.div`
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;
+	overflow-y: auto;
 `;
 
 const ModalHeader = styled.header`
@@ -162,6 +195,31 @@ const Textarea = styled.textarea`
 	&:focus {
 		outline: none;
 		border-color: ${({ theme }) => theme.interactive.primary};
+	}
+`;
+
+const ButtonContainer = styled.div`
+	display: flex;
+	gap: 1rem;
+	align-items: center;
+`;
+
+const FileUploadButton = styled.button`
+	background: none;
+	border: none;
+	color: ${({ theme }) => theme.text.primary};
+	cursor: pointer;
+	font-size: 1.4rem;
+	padding: 0;
+	text-decoration: underline;
+
+	&:hover {
+		color: ${({ theme }) => theme.interactive.primary};
+	}
+
+	&:disabled {
+		color: ${({ theme }) => theme.text.disabled};
+		cursor: not-allowed;
 	}
 `;
 

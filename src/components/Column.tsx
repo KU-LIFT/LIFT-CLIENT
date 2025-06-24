@@ -39,7 +39,7 @@ function Column({ board, tasks, onOpenAddModal, onTaskClick }: ColumnProps) {
 export default Column;
 
 const ColumnContainer = styled.div`
-	width: 320px;
+	width: 380px;
 	flex-shrink: 0;
 	height: 100%;
 	display: flex;

@@ -1,9 +1,17 @@
 import { useQuery, useMutation, useQueryClient, QueryKey } from '@tanstack/react-query';
-import { createBranch, listBranches, listCommits, createPullRequest, listPullRequests } from '@/apis/git/axios';
+import {
+	createBranch,
+	listBranches,
+	listCommits,
+	createPullRequest,
+	listPullRequests,
+	listProjectBranches,
+} from '@/apis/git/axios';
 import { CreatePrRequest, BranchInfoDto, CommitDto, GitPullRequestDto } from '@/apis/git/Git';
 
 // 공통: QueryKey 생성 함수
 const gitBranchesKey = (projectKey: string, taskId: number): QueryKey => ['gitBranches', projectKey, taskId];
+const gitProjectBranchesKey = (projectKey: string): QueryKey => ['gitProjectBranches', projectKey];
 const gitCommitsKey = (projectKey: string, taskId: number): QueryKey => ['gitCommits', projectKey, taskId];
 const gitPrsKey = (projectKey: string, taskId: number): QueryKey => ['gitPullRequests', projectKey, taskId];
 
@@ -22,11 +30,19 @@ export const useCreateBranch = (projectKey: string, taskId: number) => {
 	});
 };
 
-// ── 브랜치 리스트 조회 ──
+// ── (태스크) 브랜치 리스트 조회 ──
 export const useBranches = (projectKey: string, taskId: number) =>
 	useQuery<BranchInfoDto[]>({
 		queryKey: gitBranchesKey(projectKey, taskId),
 		queryFn: () => listBranches(projectKey, taskId),
+	});
+
+// ── (프로젝트) 브랜치 리스트 조회 ──
+export const useProjectBranches = (projectKey: string) =>
+	useQuery<BranchInfoDto[]>({
+		queryKey: gitProjectBranchesKey(projectKey),
+		queryFn: () => listProjectBranches(projectKey),
+		enabled: !!projectKey,
 	});
 
 // ── 커밋 리스트 조회 ──

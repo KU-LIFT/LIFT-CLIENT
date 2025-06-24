@@ -31,7 +31,7 @@ export const useCreateProject = () => {
 		onSuccess: (data: Project) => {
 			queryClient.invalidateQueries({ queryKey: ['userProjects'] });
 			setProjectKey(data.projectKey);
-			navigate('/board');
+			navigate('/boards');
 		},
 	});
 };

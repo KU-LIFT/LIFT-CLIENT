@@ -24,10 +24,14 @@ import { useMoveTask } from '@/apis/task/moveTask/query';
 import Column from '@/components/Column';
 import TaskDetailModal from '@/components/TaskDetailModal';
 import Button from '@/components/common/Button';
+import { useProject } from '@/apis/project/query';
 
 function BoardPage() {
 	const projectKey = useProjectKeyStore((store) => store.projectKey);
 	const queryClient = useQueryClient();
+
+	// 프로젝트 정보 조회
+	const { data: projectData } = useProject(projectKey);
 
 	// AI 모달
 	// BoardPage.tsx
@@ -114,7 +118,7 @@ function BoardPage() {
 		>
 			<BoardPageLayout>
 				<BoardPageHeader>
-					<BoardPageTitle>{boardsData[0].name}</BoardPageTitle>
+					<BoardPageTitle>{projectData?.name} Board</BoardPageTitle>
 					<Button type="primary" label="Task 추가 With AI" onClick={() => handleOpenAIModal(boardsData[0].id)} />
 				</BoardPageHeader>
 
